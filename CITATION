@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use or reference CTI in your research, please cite it as follows."
+type: software
+title: "CTI — Cognitive Throughput Infrastructure"
+abstract: "An operational theory of measurable cognition. CTI proposes a formal framework for measuring cognitive throughput, decision efficiency, and operational intelligence in AI systems."
+version: 2.0.0
+date-released: 2025-01-01
+license: CC-BY-4.0
+repository-code: "https://github.com/[nickhashira12]/cti"
+keywords:
+  - artificial-intelligence
+  - cognitive-science
+  - decision-theory
+  - throughput
+  - operational-research
+  - open-research
+  - manifesto
