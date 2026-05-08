@@ -1,0 +1,38 @@
+# Changelog
+
+All notable changes to CTI will be documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).  
+CTI uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [2.0.0] — 2025
+
+### Added
+- First public release of the CTI framework in English
+- Full formal manifesto (`MANIFESTO.md`)
+- First Law: The Cognitive Throughput Axiom ($I_t = \Delta D / \Delta T$)
+- Second Law: The Cognitive Efficiency Principle ($E_c = Q / C \cdot T$)
+- Formal Model of Cognitive Decision (contextual optimization under constraints)
+- Operational definition of a valid decision
+- Philosophical boundary declaration
+- Open research directions
+- RFC contribution system (`/rfcs/RFC-0001-template.md`)
+- Documentation structure (`/docs`)
+- Open research questions (`/research/open-questions.md`)
+
+### Philosophy
+- Explicit epistemological limit established: CTI measures operational cognition, not metaphysical truth
+- Conscious rejection of claims about consciousness, phenomenology, and absolute truth
+
+---
+
+## [1.0.0] — Internal
+
+- Initial conception of the Cognitive Throughput Layer
+- First formulations of throughput and efficiency metrics (Spanish, internal draft)
+
+---
+
+*To propose changes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md)*
