@@ -1,0 +1,88 @@
+# RFC-XXXX: [Title of Your Proposal]
+
+**Status:** Draft | Under Review | Accepted | Rejected  
+**Author(s):** [Your name / handle]  
+**Date:** YYYY-MM-DD  
+**Related RFCs:** (if any)
+
+---
+
+## Summary
+
+*One paragraph. What are you proposing and why does it matter?*
+
+---
+
+## Motivation
+
+*What problem does this RFC solve? What gap in CTI does it address?*
+
+*Be specific. Reference the relevant law, definition, or section of the manifesto.*
+
+---
+
+## Proposal
+
+*Describe your proposal in detail.*
+
+### Formal Statement (if applicable)
+
+*If proposing a new law, corollary, or metric, state it formally.*
+
+$$\text{Your formula here}$$
+
+| Variable | Definition |
+|----------|-----------|
+| ... | ... |
+
+### Operational Definition
+
+*How would this be measured or verified in practice?*
+
+---
+
+## Impact on Existing Framework
+
+*How does this interact with the First Law, Second Law, or the Formal Decision Model?*
+
+*Does it extend, revise, or challenge any existing formulation?*
+
+- [ ] Extends existing formulation
+- [ ] Revises existing formulation
+- [ ] Challenges existing formulation
+- [ ] New addition with no conflict
+
+---
+
+## Prior Art / Related Work
+
+*Reference any relevant research, frameworks, or prior work that informed this proposal.*
+
+---
+
+## Open Questions
+
+*What is still unresolved? What would need further research or debate?*
+
+1. ...
+2. ...
+
+---
+
+## Counter-Arguments
+
+*Steelman the strongest objections to this proposal. How would you respond?*
+
+---
+
+## Resolution
+
+*(Filled in after discussion period)*
+
+**Decision:** Accept / Revise / Reject  
+**Rationale:** ...  
+**Date:** YYYY-MM-DD
+
+---
+
+*This RFC follows the [CTI contribution process](../CONTRIBUTING.md)*
