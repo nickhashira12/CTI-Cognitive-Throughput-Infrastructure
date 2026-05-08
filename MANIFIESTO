@@ -1,0 +1,250 @@
+# CTI v2 — Cognitive Throughput Infrastructure
+
+## Toward an Operational Theory of Measurable Cognition
+
+**Version:** 2.0.0 &nbsp;|&nbsp; **Status:** Open Research Draft &nbsp;|&nbsp; **License:** CC BY 4.0
+
+---
+
+## Introduction
+
+Modern artificial intelligence has been built on a fundamental obsession:
+
+- More parameters
+- More compute
+- More speed
+- More outputs
+
+Yet the industry still lacks something essential: **an operational theory of cognition.**
+
+Today we measure tokens per second, latency, FLOPS, accuracy, and benchmarks.
+
+But we still don't know how to formally measure:
+
+- The flow of valid decisions
+- Cognitive efficiency
+- The operational dynamics of intelligent systems
+
+**CTI (Cognitive Throughput Infrastructure) emerges as a response to that gap.**
+
+---
+
+## What is CTI
+
+CTI proposes a new operational layer: **The Cognitive Throughput Layer** — situated above models, tools, frameworks, and multi-agent systems.
+
+```
+┌─────────────────────────────────────┐
+│           Applications              │
+├─────────────────────────────────────┤
+│       Agents / Orchestration        │
+├─────────────────────────────────────┤
+│   ★  Cognitive Throughput Layer  ★  │
+├─────────────────────────────────────┤
+│         Models / Compute            │
+└─────────────────────────────────────┘
+```
+
+Its purpose is to:
+
+- Measure cognition
+- Observe cognitive transformations
+- Optimize decision throughput
+- Build intelligent systems aware of their own operational efficiency
+
+---
+
+## The Paradigm Shift
+
+The current industry optimizes: **Outputs**
+
+CTI proposes to optimize: **Cognition**
+
+---
+
+## Foundational Principle
+
+CTI is built on an explicit epistemological limit:
+
+> *"CTI measures operationally verifiable cognitive transformations, not metaphysical truth."*
+
+CTI does **not** attempt to prove consciousness, define absolute intelligence, or claim to understand subjective experience.
+
+CTI only attempts to measure observable cognitive behavior within operational systems.
+
+---
+
+## First Law of CTI — The Cognitive Throughput Axiom
+
+The operational capacity of an intelligent system can be measured by the rate at which it produces validated decisions over time.
+
+$$I_t = \frac{\Delta D}{\Delta T}$$
+
+| Variable | Definition |
+|---|---|
+| $I_t$ | Inference Throughput |
+| $\Delta D$ | Validated Strategic Decisions |
+| $\Delta T$ | Temporal Latency |
+
+The First Law redefines cognition as measurable throughput. Under CTI, intelligence is not evaluated solely by outputs, but by the **rate of validated cognition**.
+
+---
+
+## Second Law of CTI — The Cognitive Efficiency Principle
+
+Optimal cognition is not that which produces the most outputs, but that which generates **high-quality decisions under limited constraints**.
+
+$$E_c = \frac{Q}{C \cdot T}$$
+
+| Variable | Definition |
+|---|---|
+| $E_c$ | Cognitive Efficiency |
+| $Q$ | Decision Quality |
+| $C$ | Computational Cost |
+| $T$ | Temporal Latency |
+
+The Second Law establishes that higher-quality decisions increase efficiency, while excessive latency or resource consumption reduce it. Optimal cognition means **maximizing cognitive utility under real constraints** — not maximizing output volume.
+
+---
+
+## Formal Model of Cognitive Decision
+
+CTI proposes that a valid decision can be formally modeled as a contextual optimization problem under limited constraints.
+
+A valid decision is defined as:
+
+> *"A state-transition operator that maximizes expected contextual utility under limited constraints of information and compute."*
+
+$$\underset{D}{\arg\max} \; \mathbb{E}[U(D) \mid I, C, R]$$
+
+Subject to:
+
+$$R_c < R_{max}$$
+
+| Variable | Meaning |
+|---|---|
+| $U(D)$ | Expected contextual utility |
+| $I$ | Available information |
+| $C$ | Operational context |
+| $R$ | Resource constraints |
+| $R_c$ | Computational cost |
+
+Under CTI, a decision is not evaluated solely by its output — but by its capacity to **maximize operational utility** within real limits of time, information, and compute.
+
+This implies optimal cognition is **not** perfect — it is **adaptively efficient under limited constraints**.
+
+---
+
+## Operational Definition of a Valid Decision
+
+CTI defines a valid decision as:
+
+> *"A cognitive output whose causal effect advances a defined objective within an observable operational context."*
+
+This definition intentionally avoids metaphysical claims, requirements of absolute truth, and domain-specific semantics. It focuses on:
+
+- **Causal effectiveness**
+- **Operational observability**
+- **Contextual utility**
+
+---
+
+## Philosophical Boundary
+
+CTI explicitly rejects claims about consciousness, phenomenology, metaphysical intelligence, or absolute truth. CTI only evaluates observable operational cognition, measurable decision transformations, and reasoning systems under constraints.
+
+| Problem | CTI Scope |
+|---|---|
+| Cognitive throughput | ✅ |
+| Decision efficiency | ✅ |
+| Operational validation | ✅ |
+| Cognitive observability | ✅ |
+| Consciousness | ❌ |
+| Subjective experience | ❌ |
+| Absolute truth | ❌ |
+
+---
+
+## The Conceptual Shift
+
+**Traditional AI:**
+
+```
+input → output
+```
+
+**CTI proposes:**
+
+```
+state → cognitive transformation → contextual utility
+```
+
+---
+
+## What CTI Is Not
+
+CTI is **not** a foundation model, an agent, a prompt wrapper, a dashboard, or a traditional benchmark.
+
+## What CTI Aims to Be
+
+- A **cognitive observability infrastructure**
+- An **operational theory** of cognitive throughput
+- An **open standard** for measuring intelligent systems
+- A **universal layer** of cognitive optimization
+
+---
+
+## Open System Philosophy
+
+CTI is proposed as an open framework, an open research system, and a collaborative ecosystem based on RFCs.
+
+The goal is not proprietary control. The goal is to allow **anyone to contribute to building an operational science of measurable cognition**.
+
+---
+
+## Why This Matters
+
+The next generation of intelligent systems will not be defined solely by larger models, more memory, or more computational power.
+
+It will be defined by systems capable of:
+
+- Optimizing decisions
+- Reducing cognitive friction
+- Increasing operational throughput under real constraints
+
+---
+
+## Open Research Directions
+
+CTI opens multiple research lines:
+
+1. Cognitive observability
+2. Throughput metrics
+3. Multi-agent optimization
+4. Reasoning under constraints
+5. Cognitive routing
+6. Operational efficiency
+7. Contextual validation
+8. Adaptive decision systems
+
+→ See [`/research/open-questions.md`](./research/open-questions.md) for the full list.
+
+---
+
+## Open Invitation
+
+CTI is designed to evolve publicly. We invite researchers, engineers, mathematicians, philosophers, cognitive scientists, systems architects, and open-source communities to **question, attack, improve, and expand** this system.
+
+---
+
+## Closing Statement
+
+We are not trying to build another AI tool.
+
+We are trying to explore whether **operational cognition can become a measurable discipline**.
+
+**CTI is the beginning of that experiment.**
+
+---
+
+*CTI v2.0.0 — Licensed under [CC BY 4.0](./LICENSE)*
