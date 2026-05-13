@@ -17,35 +17,37 @@ flowchart LR
     I[Information I] --> OPT
     C[Context C] --> OPT
     R[Resources R] --> OPT
-    OPT{"Bounded Optimization<br/>argmax expected U of D<br/>subject to R_c &lt; R_max"} --> D[Decision D]
-    D --> E[Causal effect on system state]
-    E --> V{Advances<br/>objective?}
-    V -->|yes| VALID[Valid decision under CTI]
-    V -->|no| INVALID[Not valid]
+    OPT{"Bounded Optimization<br/>argmax expected U of e<br/>subject to R_c &lt; R_max"} --> E["Cognitive Event e<br/>{trigger, output, validator,<br/>cost, latency}"]
+    E --> EFF[Causal effect on system state]
+    EFF --> V{validator e<br/>truthy?}
+    V -->|yes| VALID[Validated ECE under CTI]
+    V -->|no| INVALID[Unvalidated event]
     style OPT fill:#0a0a0a,stroke:#00d9ff,color:#ffffff,stroke-width:2px
-    style D fill:#1a1a1a,stroke:#ffffff,color:#ffffff
+    style E fill:#1a1a1a,stroke:#ffffff,color:#ffffff
     style VALID fill:#0a3d2e,stroke:#10b981,color:#ffffff
     style INVALID fill:#3d0a0a,stroke:#ef4444,color:#ffffff
     style V fill:#1a1a1a,stroke:#ffffff,color:#ffffff
     style I fill:#f5f5f5,stroke:#1a1a1a,color:#1a1a1a
     style C fill:#f5f5f5,stroke:#1a1a1a,color:#1a1a1a
     style R fill:#f5f5f5,stroke:#1a1a1a,color:#1a1a1a
-    style E fill:#f5f5f5,stroke:#1a1a1a,color:#1a1a1a
+    style EFF fill:#f5f5f5,stroke:#1a1a1a,color:#1a1a1a
 ```
 
-A decision flows from three inputs (information, context, resources) through a bounded optimization that respects cost constraints, produces an output, and is then evaluated by its causal effect. Only decisions whose effect advances a defined objective qualify as **valid** under CTI.
+A cognitive event flows from three inputs (information, context, resources) through a bounded optimization that respects cost constraints, produces a structured event $e = \{trigger, output, validator, cost, latency\}$, and is then evaluated by its own attached `validator`. Only events whose `validator` returns a truthy score qualify as **validated** under CTI.
+
+See [`primitives.md`](./primitives.md) for the full specification of the Evaluable Cognitive Event.
 
 ---
 
 ## The Optimization Problem
 
-A valid decision is defined as:
+A validated cognitive event is defined as:
 
-> *"A state-transition operator that maximizes expected contextual utility under limited constraints of information and compute."*
+> *"A state-transition operator that maximizes expected contextual utility under limited constraints of information and compute, and whose attached `validator` returns a truthy score."*
 
 **Formally:**
 
-$$\underset{D}{\arg\max} \; \mathbb{E}[U(D) \mid I, C, R]$$
+$$\underset{e}{\arg\max} \; \mathbb{E}[U(e) \mid I, C, R]$$
 
 **Subject to:**
 
@@ -57,12 +59,12 @@ $$R_c < R_{max}$$
 
 | Variable | Type | Meaning |
 |----------|------|---------|
-| $D$ | Decision | The cognitive output being evaluated |
-| $U(D)$ | Function | Expected contextual utility of decision $D$ |
-| $I$ | Context | Available information at decision time |
+| $e$ | ECE | The cognitive event being evaluated (see [`primitives.md`](./primitives.md)) |
+| $U(e)$ | Function | Expected contextual utility of event $e$ |
+| $I$ | Context | Available information at event time |
 | $C$ | Context | Operational context (goals, environment, state) |
 | $R$ | Constraint | Resource constraints (time, compute, memory) |
-| $R_c$ | Scalar | Actual computational cost incurred |
+| $R_c$ | Scalar | Actual computational cost incurred (corresponds to the `cost` field of $e$) |
 | $R_{max}$ | Scalar | Maximum allowable resource cost |
 
 ---
@@ -77,31 +79,32 @@ This means:
 
 - Optimal cognition under CTI is **not** perfect cognition
 - It is **adaptively efficient** given available resources
-- A decision made with limited information that maximizes $\mathbb{E}[U(D) \mid I, C, R]$ within $R_{max}$ is a **valid** decision under the protocol
+- An event made with limited information that maximizes $\mathbb{E}[U(e) \mid I, C, R]$ within $R_{max}$ — and whose `validator` returns truthy — is a **validated ECE** under the protocol
 
 ### 2. Contextual Utility
 
-$U(D)$ is **context-dependent**. Utility is not absolute. A decision is evaluated by its effect within a specific operational context $C$, not by abstract standards.
+$U(e)$ is **context-dependent**. Utility is not absolute. An event is evaluated by its effect within a specific operational context $C$, not by abstract standards.
 
 ### 3. Causal Grounding
 
-A valid decision must produce a **causal effect** that advances a defined objective. A decision with no measurable effect on system state does not qualify as valid under CTI.
+A validated ECE must produce a **causal effect** that advances a defined objective. An event with no measurable effect on system state does not qualify as validated under CTI.
 
 ---
 
-## Operational Definition of a Valid Decision
+## Operational Definition of a Validated ECE
 
-CTI defines a valid decision as:
+CTI defines a validated Evaluable Cognitive Event as:
 
-> *"A cognitive output whose causal effect advances a defined objective within an observable operational context."*
+> *"A cognitive event $e = \{trigger, output, validator, cost, latency\}$ whose causal effect advances a defined objective within an observable operational context, and whose `validator(trigger, output)` returns a truthy score."*
 
 This definition is deliberately:
 
 - **Free of metaphysical claims** — no appeal to absolute truth or consciousness
 - **Free of domain-specific semantics** — applicable across reasoning systems, agents, and pipelines
 - **Anchored to observability** — non-observable transformations are out of scope
+- **Type-checked** — the event has a formal signature, not a vocabulary
 
-> **Roadmap note.** In v3.1, the primitive "decision" will be replaced by **evaluable cognitive event** with a formal type signature `{trigger, output, validator, cost, latency}`. This closes the polysemy of "decision" identified in Q1.3.
+> **Closed in v3.1.** The polysemy of "decision" identified in Q1.3 is now resolved by the **Evaluable Cognitive Event** primitive in [`primitives.md`](./primitives.md).
 
 ---
 
@@ -109,8 +112,8 @@ This definition is deliberately:
 
 The formal model underpins both metric specifications:
 
-- **Specification 1** ($I_t = \Delta D / \Delta T$): $\Delta D$ counts decisions that satisfy $\arg\max_D \mathbb{E}[U(D) \mid I, C, R]$ within $R_c < R_{max}$
-- **Specification 2** ($E_c = Q / (C \cdot T)$): $Q$ corresponds to realized $U(D)$; $C$ and $T$ correspond to $R_c$ and its temporal component
+- **Specification 1** ($I_t = \Delta D / \Delta T$): $\Delta D$ counts ECEs that satisfy $\arg\max_e \mathbb{E}[U(e) \mid I, C, R]$ within $R_c < R_{max}$ **and** whose `validator` returns truthy
+- **Specification 2** ($E_c = \sum Q(e) / \sum (\text{cost}(e) \cdot \text{latency}(e))$): $Q(e)$ corresponds to the validator score of $e$; $\text{cost}(e)$ and $\text{latency}(e)$ are fields of $e$, corresponding to $R_c$ and the temporal component respectively
 
 ---
 
@@ -129,12 +132,14 @@ CTI's contribution is not the model. CTI's contribution is the **explicit adopti
 
 ## Open Questions
 
-1. How is $U(D)$ specified across domains? (See Q2.1)
+1. How is $U(e)$ specified across domains? (See Q2.1)
 2. How is $R_{max}$ set in practice — statically, adaptively, by the operator, by the system? (See Q2.2)
-3. What is the minimum information $I$ for a decision to qualify as valid? (See Q2.3)
-4. How does the model extend to multi-agent settings where decisions interact? (See Q2.4)
+3. What is the minimum information $I$ for an event to qualify as validated? (See Q2.3)
+4. How does the model extend to multi-agent settings where events interact? (See Q2.4)
 5. Can the model be implemented as a real-time monitoring layer without measurement-induced latency? (See Q1.4 and Q3.1)
 
 ---
 
 *Propose extensions or challenges via the [RFC process](../rfcs/RFC-0001-template.md).*
+[formal-model.md](https://github.com/user-attachments/files/27735948/formal-model.md)
+
