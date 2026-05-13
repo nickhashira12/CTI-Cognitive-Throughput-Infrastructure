@@ -7,6 +7,43 @@ CTI uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.1.0] — 2026
+
+### Breaking Changes
+- **Introduced the Evaluable Cognitive Event (ECE) primitive** as the formal atomic unit of CTI measurement. Replaces the informal "decision" primitive used in v3.0.
+- **Specification 1 revised:** $\Delta D$ is now defined as the count of ECEs in the measurement window whose `validator` returns a truthy score.
+- **Specification 2 revised:** $E_c$ is now defined as $\sum Q(e) / \sum (\text{cost}(e) \cdot \text{latency}(e))$ over a set of ECEs, where $Q$, $\text{cost}$, and $\text{latency}$ are fields of each event.
+- **Formal model revised:** the optimization variable $D$ (decision) is replaced by $e$ (cognitive event) throughout.
+
+### Added
+- New document [`/docs/primitives.md`](./docs/primitives.md) defining the ECE with:
+  - Type signature in TypeScript, JSON Schema, and Python
+  - Three canonical validator forms (boolean, scalar, vector)
+  - Three worked examples (LLM tool-use, RL agent, retrieval)
+  - Explicit list of fields excluded from the core primitive
+- Section "Primitive — The Evaluable Cognitive Event" in `MANIFESTO.md`
+- Section "Primitive — The Evaluable Cognitive Event" in `README.md`
+
+### Changed
+- `docs/protocol.md` — Specifications 1 and 2 rewritten over ECEs
+- `docs/formal-model.md` — variable $D$ replaced by $e$; decision flow diagram updated to show ECE as the structured event
+- `MANIFESTO.md` — version bumped to 3.1.0; Operational Definition section rewritten; Formal Model section variables updated; roadmap marks v3.1 as current
+- `README.md` — version badge bumped to 3.1.0; Spec 1 and Spec 2 rewritten; Repository table adds `primitives.md`; Roadmap marks v3.1 as current
+- `research/open-questions.md` — **Q1.3 marked as Closed** with link to `primitives.md`
+- `CITATION.cff` — version bumped to 3.1.0
+
+### Closed Open Questions
+- **Q1.3** — "What is the baseline unit of a 'decision'?" Resolved by the ECE primitive.
+
+### Backward Compatibility
+v3.1 is **not** backward compatible with v3.0 for implementers. Any system claiming CTI compliance under v3.1 must emit ECEs with all five fields. The metric formulas are functionally equivalent when an implementation maps cleanly onto the ECE schema, but the variable names in published code and telemetry should be updated.
+
+### Roadmap (unchanged from v3.0)
+- **v3.2.0** — Reference implementation: compute $I_t$ and $E_c$ across LangGraph, CrewAI, OpenAI Agents SDK, AutoGen. Converts CTI from manifesto to instrument.
+- **v3.3.0** — One falsifiable empirical claim regarding $E_c$ scaling under model size in agentic tool-use tasks.
+
+---
+
 ## [3.0.0] — 2026
 
 ### Breaking Changes
@@ -69,3 +106,4 @@ CTI uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ---
 
 *To propose changes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).*
+Uploading CHANGELOG.md…]()
