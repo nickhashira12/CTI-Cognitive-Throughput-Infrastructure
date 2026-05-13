@@ -1,8 +1,8 @@
 # Contributing to CTI
 
-Thank you for your interest in contributing to the **Cognitive Throughput Infrastructure** project.
+Thank you for your interest in contributing to the **Cognitive Throughput Infrastructure** measurement protocol.
 
-CTI is an open research framework. It is designed to be questioned, challenged, improved, and expanded by anyone — regardless of background or discipline.
+CTI is an open specification. It is designed to be questioned, challenged, implemented, and extended by anyone — regardless of background or discipline.
 
 ---
 
@@ -22,20 +22,22 @@ CTI welcomes contributions from:
 ## Types of Contributions
 
 ### 1. RFCs (Request for Comments)
-The primary mechanism for proposing changes, extensions, or challenges to the CTI framework.
+The primary mechanism for proposing changes, extensions, or challenges to the CTI protocol.
 
 Use the template at [`/rfcs/RFC-0001-template.md`](./rfcs/RFC-0001-template.md) and open a Pull Request.
 
 Good RFC topics:
-- Proposing new laws or corollaries
+- Proposing new metrics or corollaries to Specifications 1 and 2
 - Challenging existing formulations
-- Proposing new metrics or observability methods
-- Extending the formal decision model
+- Proposing operationalization methods for $\Delta D$, $Q$, or $U(D)$
+- Extending the formal model
 - Proposing domain-specific implementations
+- Reference implementations across agent stacks
+- Falsifiable empirical claims
 
 ### 2. Issues
 Use GitHub Issues to:
-- Report inconsistencies or errors in the manifesto
+- Report inconsistencies or errors in the specification
 - Ask questions about formulations
 - Suggest improvements without a full RFC
 - Flag mathematical errors or logical gaps
@@ -49,9 +51,9 @@ Use GitHub Discussions to:
 
 ### 4. Documentation
 Help improve:
-- `/docs` explanations of the laws and model
+- `/docs` explanations of the specifications and model
 - `/research/open-questions.md`
-- Translations of the manifesto into other languages
+- Translations into other languages
 
 ---
 
@@ -75,7 +77,7 @@ CTI operates under the following principles:
 - **Constructive criticism** — Attack ideas, not people
 - **Openness** — Assume good faith in contributions
 
-We do not tolerate harassment, dismissiveness, or bad-faith engagement.
+Harassment, dismissiveness, and bad-faith engagement are not tolerated.
 
 ---
 
@@ -83,12 +85,13 @@ We do not tolerate harassment, dismissiveness, or bad-faith engagement.
 
 High-value contributions:
 
-✅ Formal critiques of the two laws  
-✅ Proposals for measuring $\Delta D$ (validated decisions) empirically  
-✅ Extensions of the decision model to multi-agent systems  
-✅ Implementations or experiments that test CTI metrics  
-✅ Counter-examples that challenge the framework  
-✅ Related work from adjacent fields (bounded rationality, information theory, etc.)  
+✅ Formal critiques of the two specifications
+✅ Operationalization proposals for $\Delta D$, $Q$, $U(D)$
+✅ Extensions of the model to multi-agent settings
+✅ Reference implementations and measurements across real systems
+✅ Falsifiable empirical claims under the protocol
+✅ Counter-examples that challenge the protocol
+✅ Related work from adjacent fields (bounded rationality, information theory, AI observability)
 
 ---
 
@@ -98,6 +101,7 @@ High-value contributions:
 - Use **LaTeX math notation** for all formulas (GitHub renders `$...$` and `$$...$$`)
 - Keep claims **operationally grounded** — avoid metaphysical assertions
 - Cite prior work where relevant
+- Prefer **definition** over **assertion**; prefer **specification** over **law**
 
 ---
 
