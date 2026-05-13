@@ -2,7 +2,7 @@
 
 ## A Measurement Protocol for Operational Cognition
 
-**Version:** 3.0.0 &nbsp;|&nbsp; **Status:** Open Specification &nbsp;|&nbsp; **License:** CC BY 4.0
+**Version:** 3.1.0 &nbsp;|&nbsp; **Status:** Open Specification &nbsp;|&nbsp; **License:** CC BY 4.0
 
 ---
 
@@ -76,8 +76,8 @@ $$I_t = \frac{\Delta D}{\Delta T}$$
 
 | Variable | Definition | Unit |
 |---|---|---|
-| $I_t$ | Throughput | decisions / time |
-| $\Delta D$ | Count of validated decisions in interval | count |
+| $I_t$ | Throughput | events / time |
+| $\Delta D$ | Count of validated Evaluable Cognitive Events in interval | count |
 | $\Delta T$ | Interval duration | time |
 
 **Operational consequence.** Under CTI, a system's measured cognition is the rate at which it produces decisions that pass a domain-specific validator — not the rate at which it produces outputs.
@@ -94,16 +94,18 @@ $$I_t = \frac{\Delta D}{\Delta T}$$
 
 ## Specification 2 — Efficiency Metric
 
-**Definition.** The efficiency of a decision system is decision quality per unit cost per unit time.
+**Definition.** The efficiency of a decision system is decision quality per unit cost per unit time, computed over a set of Evaluable Cognitive Events.
 
-$$E_c = \frac{Q}{C \cdot T}$$
+For a set of ECEs $E = \{e_1, \ldots, e_n\}$ in a measurement window:
+
+$$E_c = \frac{\sum_{e \in E} Q(e)}{\sum_{e \in E} \text{cost}(e) \cdot \text{latency}(e)}$$
 
 | Variable | Definition |
 |---|---|
 | $E_c$ | Efficiency |
-| $Q$ | Decision quality (rubric-scored or task-validated) |
-| $C$ | Computational cost |
-| $T$ | Latency |
+| $Q(e)$ | Quality score of ECE $e$ (validator output, scalar form) |
+| $\text{cost}(e)$ | The `cost` field of ECE $e$ |
+| $\text{latency}(e)$ | The `latency` field of ECE $e$ |
 
 **Operational consequence.** An efficient system maximizes decision quality while minimizing cost and latency. A system that produces more low-quality decisions does not improve $E_c$; a system that produces fewer high-quality decisions at low cost does.
 
@@ -111,11 +113,52 @@ $$E_c = \frac{Q}{C \cdot T}$$
 
 ---
 
-## Formal Model of Decision
+## Primitive — The Evaluable Cognitive Event
 
-CTI models a valid decision as a contextual optimization problem under bounded rationality:
+**New in v3.1.** Specifications 1 and 2 operate over a formal primitive: the **Evaluable Cognitive Event (ECE)**.
 
-$$\underset{D}{\arg\max} \; \mathbb{E}[U(D) \mid I, C, R]$$
+$$\text{ECE} := \{\, \text{trigger}, \;\text{output}, \;\text{validator}, \;\text{cost}, \;\text{latency} \,\}$$
+
+| Field | Required | Role |
+|---|---|---|
+| `trigger` | ✅ | The causal antecedent of the event |
+| `output` | ✅ | The result produced |
+| `validator` | ✅ | A function `(trigger, output) → score` that evaluates the output |
+| `cost` | ✅ | Non-negative scalar — computational cost |
+| `latency` | ✅ | Non-negative scalar — wall-clock duration |
+
+An ECE is **only valid as a unit of CTI measurement when all five fields are populated**. The metric definitions are now:
+
+- **Specification 1:** $\Delta D$ = count of ECEs in the window whose `validator` returned a truthy score
+- **Specification 2:** $E_c$ = sum of validator scores divided by sum of `cost · latency` across ECEs
+
+This primitive **closes Q1.3** ("What is the baseline unit of a decision?") — a question deliberately left open in v3.0.
+
+The full type signature in TypeScript, JSON Schema, and Python, with examples across LLM, RL, and retrieval systems, is specified in [`/docs/primitives.md`](./docs/primitives.md).
+
+### Why a Primitive
+
+v3.0 used the word **decision** as the measurement unit. This worked as prose but failed as engineering:
+
+- Polysemic: in an LLM, is a decision a token, a response, a tool-call, a reasoning step?
+- Untyped: two implementations could not agree on $\Delta D$ without separate negotiation
+- Unvalidatable: a validator needs structure, not vocabulary
+
+The ECE has structure. Two implementations agreeing on the ECE schema agree on what is being measured.
+
+### What Changes for Implementers
+
+A system claiming CTI compliance must emit ECEs with all five fields. From a stream of ECEs, the protocol's measurement layer derives $I_t$ and $E_c$ directly. There is no separate "decision counter" to maintain.
+
+The word **decision** remains valid informal vocabulary. Under the protocol, the measurable unit is the ECE.
+
+---
+
+## Formal Model of Cognition
+
+CTI models a validated ECE as a contextual optimization problem under bounded rationality:
+
+$$\underset{e}{\arg\max} \; \mathbb{E}[U(e) \mid I, C, R]$$
 
 Subject to:
 
@@ -123,11 +166,11 @@ $$R_c < R_{max}$$
 
 | Variable | Meaning |
 |---|---|
-| $U(D)$ | Expected contextual utility |
+| $U(e)$ | Expected contextual utility |
 | $I$ | Available information |
 | $C$ | Operational context |
 | $R$ | Resource constraints |
-| $R_c$ | Computational cost |
+| $R_c$ | Computational cost (corresponds to ECE `cost` field) |
 | $R_{max}$ | Maximum allowable cost |
 
 This is the bounded-rationality optimization familiar from Simon (1955) and standard in constrained MDPs. CTI does not claim originality on the formal model. CTI uses it as the foundation under Specifications 1 and 2, with explicit attribution.
@@ -136,19 +179,20 @@ Optimal cognition under CTI is **not** perfect cognition. It is **adaptively eff
 
 ---
 
-## Operational Definition of a Valid Decision
+## Operational Definition of a Validated ECE
 
-CTI defines a valid decision as:
+CTI defines a validated Evaluable Cognitive Event as:
 
-> *"A cognitive output whose causal effect advances a defined objective within an observable operational context."*
+> *"A cognitive event $e = \{trigger, output, validator, cost, latency\}$ whose causal effect advances a defined objective within an observable operational context, and whose `validator(trigger, output)` returns a truthy score."*
 
 This definition is deliberately:
 
-- **Causally grounded** — a decision with no observable effect on system state is not valid under CTI
-- **Operationally observable** — a decision that cannot be logged or measured is outside scope
+- **Causally grounded** — an ECE with no observable effect on system state is not validated under CTI
+- **Operationally observable** — events that cannot be logged or measured are outside scope
 - **Contextual** — utility is defined relative to a stated objective, not in the abstract
+- **Type-checked** — the event has a formal signature, not a vocabulary
 
-> *Note: in v3.1, the primitive "decision" will be replaced by **evaluable cognitive event** with a formal type signature `{trigger, output, validator, cost, latency}`. The polysemy of "decision" is the largest semantic weakness of v3.0 and is the next item on the roadmap.*
+> *Closed in v3.1: the polysemy of "decision" identified in Q1.3 of v3.0 is resolved by the ECE primitive. See [`/docs/primitives.md`](./docs/primitives.md).*
 
 ---
 
@@ -236,8 +280,8 @@ CTI specifies how to measure all three.
 | Version | Focus | Status |
 |---|---|---|
 | v2.0.0 | "Laws" framing (deprecated) | Archived |
-| **v3.0.0** | **Reframe as protocol; remove "Law" language** | **Current** |
-| v3.1.0 | Replace "decision" primitive with **evaluable cognitive event** | Planned |
+| v3.0.0 | Reframe as protocol; remove "Law" language | Released |
+| **v3.1.0** | **Replace "decision" primitive with evaluable cognitive event** | **Current** |
 | v3.2.0 | Reference implementation: $I_t$, $E_c$ across agentic LLM stacks | Planned |
 | v3.3.0 | One falsifiable empirical claim on $E_c$ scaling | Planned |
 
@@ -270,10 +314,11 @@ CTI is designed to evolve publicly. Researchers, engineers, mathematicians, phil
 
 CTI does not claim to be a theory of intelligence. It claims to be a measurement protocol — useful, falsifiable, and revisable.
 
-v3.0.0 removes the "Law" framing. Subsequent versions will add an operationalized primitive, a reference implementation, and at least one falsifiable empirical claim.
+v3.0.0 removed the "Law" framing. v3.1.0 replaces the informal "decision" with a typed primitive — the Evaluable Cognitive Event. Subsequent versions will add a reference implementation and at least one falsifiable empirical claim.
 
 This is the beginning of a specification, not the end of a manifesto.
 
 ---
 
-*CTI v3.0.0 — Licensed under [CC BY 4.0](./LICENSE)*
+*CTI v3.1.0 — Licensed under [CC BY 4.0](./LICENSE)*
+ding MANIFESTO.md…]()

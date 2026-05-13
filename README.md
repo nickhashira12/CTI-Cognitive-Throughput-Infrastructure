@@ -2,7 +2,7 @@
 
 > *A measurement protocol for operational cognition in AI systems*
 
-[![Version](https://img.shields.io/badge/version-3.0.0-000000?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.1.0-000000?style=flat-square)](./CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-open_specification-1a1a1a?style=flat-square)](./MANIFESTO.md)
 [![License](https://img.shields.io/badge/license-CC_BY_4.0-1a1a1a?style=flat-square)](./LICENSE)
 [![Governance](https://img.shields.io/badge/governance-RFC-1a1a1a?style=flat-square)](./CONTRIBUTING.md)
@@ -56,28 +56,42 @@ $$I_t = \frac{\Delta D}{\Delta T}$$
 
 | Variable | Definition | Unit |
 |---|---|---|
-| $I_t$ | Throughput | decisions / time |
-| $\Delta D$ | Count of validated decisions in interval | count |
+| $I_t$ | Throughput | events / time |
+| $\Delta D$ | Count of validated Evaluable Cognitive Events in interval | count |
 | $\Delta T$ | Interval duration | time |
 
-This is a **definition**, not a physical law. CTI does not claim throughput is the only meaningful measure of cognition. CTI claims throughput is **operationally measurable** when validation is specified per domain, and **useful for cross-system comparison**.
+This is a **definition**, not a physical law. CTI does not claim throughput is the only meaningful measure of cognition. CTI claims throughput is **operationally measurable** when validation is specified per domain via the ECE primitive, and **useful for cross-system comparison**.
 
 ---
 
 ## Specification 2 — Efficiency Metric
 
-The efficiency of a decision system is defined as decision quality per unit cost per unit time.
+The efficiency of a decision system is defined as decision quality per unit cost per unit time, computed over a set of Evaluable Cognitive Events.
 
-$$E_c = \frac{Q}{C \cdot T}$$
+For a set of ECEs $E$ in a measurement window:
+
+$$E_c = \frac{\sum_{e \in E} Q(e)}{\sum_{e \in E} \text{cost}(e) \cdot \text{latency}(e)}$$
 
 | Variable | Definition |
 |---|---|
 | $E_c$ | Efficiency |
-| $Q$ | Decision quality (rubric-scored or task-validated) |
-| $C$ | Computational cost |
-| $T$ | Latency |
+| $Q(e)$ | Quality score of ECE $e$ (validator output, scalar form) |
+| $\text{cost}(e)$ | The `cost` field of ECE $e$ |
+| $\text{latency}(e)$ | The `latency` field of ECE $e$ |
 
-$Q$ must be operationalized per domain. CTI provides the form; the implementing system provides the rubric.
+The ECE primitive eliminates the v3.0 ambiguity around $Q$. Each ECE carries its own validator. CTI provides the form; the implementing system provides the rubric.
+
+---
+
+## Primitive — The Evaluable Cognitive Event
+
+**New in v3.1.** The atomic unit of measurement under CTI:
+
+$$\text{ECE} := \{\, \text{trigger}, \;\text{output}, \;\text{validator}, \;\text{cost}, \;\text{latency} \,\}$$
+
+Every ECE carries five required fields. Specifications 1 and 2 operate directly over streams of ECEs. The primitive closes the v3.0 polysemy of "decision."
+
+→ Full type signature (TypeScript, JSON Schema, Python) and worked examples in [`docs/primitives.md`](./docs/primitives.md).
 
 ---
 
@@ -132,6 +146,7 @@ CTI is not a foundation model, an agent, a runtime, a prompt wrapper, a dashboar
 |---|---|
 | [`MANIFESTO.md`](./MANIFESTO.md) | Full protocol manifesto |
 | [`/docs/protocol.md`](./docs/protocol.md) | Specifications 1 & 2 in detail |
+| [`/docs/primitives.md`](./docs/primitives.md) | **The Evaluable Cognitive Event — primitive type signature** |
 | [`/docs/formal-model.md`](./docs/formal-model.md) | Decision optimization model |
 | [`/docs/philosophy.md`](./docs/philosophy.md) | Epistemic boundaries |
 | [`/rfcs/RFC-0001-template.md`](./rfcs/RFC-0001-template.md) | Proposal template |
@@ -145,8 +160,8 @@ CTI is not a foundation model, an agent, a runtime, a prompt wrapper, a dashboar
 
 | Version | Focus |
 |---|---|
-| v3.0.0 (current) | Reframe as protocol; remove "Law" language |
-| v3.1.0 (planned) | Replace "decision" primitive with **evaluable cognitive event** with formal type signature |
+| v3.0.0 | Reframe as protocol; remove "Law" language |
+| **v3.1.0 (current)** | **Replace "decision" primitive with evaluable cognitive event** |
 | v3.2.0 (planned) | Reference implementation: $I_t$ and $E_c$ computed across agentic LLM stacks |
 | v3.3.0 (planned) | One falsifiable empirical claim regarding $E_c$ scaling under model size |
 
@@ -164,9 +179,10 @@ CTI evolves through RFCs. Submit proposals, challenges, implementations, or coun
 
 CTI does not claim to be a theory of intelligence. It claims to be a measurement protocol — useful, falsifiable, revisable.
 
-This is v3.0.0. The "Laws" framing is gone. What remains is a specification.
+v3.0.0 retired the "Laws" framing. v3.1.0 introduces a typed primitive — the Evaluable Cognitive Event — so the protocol is now implementable, not just describable.
 
 ---
 
 *Licensed under [CC BY 4.0](./LICENSE)*
+Uploading README.md…]()
 Uploading README.md…]()

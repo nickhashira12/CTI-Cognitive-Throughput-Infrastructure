@@ -2,7 +2,10 @@
 
 > *Specifications 1 & 2 — Detailed*
 
-This document defines the two metric specifications that constitute the CTI protocol. v2 of this document used "Law" framing; v3 removes it. The metrics are unchanged; the positioning is corrected.
+This document defines the two metric specifications that constitute the CTI protocol.
+
+- **v2** used "Law" framing. **v3.0** removed it.
+- **v3.1** revises the metrics to operate over the formal primitive defined in [`primitives.md`](./primitives.md) — the **Evaluable Cognitive Event (ECE)**. Read that document first; the specifications below assume it.
 
 ---
 
@@ -35,33 +38,39 @@ Both specifications inherit from the same bounded-rationality formal model. They
 
 ### Statement
 
-The throughput of a decision system is defined as the rate of validated decisions per unit time.
+The throughput of a decision system is defined as the rate of validated Evaluable Cognitive Events per unit time.
 
 ### Formal Expression
 
 $$I_t = \frac{\Delta D}{\Delta T}$$
 
+Where:
+
+$$\Delta D = \left| \{\, e \in \text{ECE}_{[t,\; t+\Delta T]} \;:\; \text{validator}(e) \text{ truthy} \,\} \right|$$
+
 | Variable | Definition | Unit |
 |----------|-----------|------|
-| $I_t$ | Throughput | decisions / time |
-| $\Delta D$ | Count of validated decisions in interval | count |
+| $I_t$ | Throughput | events / time |
+| $\Delta D$ | Count of ECEs in the window whose `validator` returned a truthy score | count |
 | $\Delta T$ | Interval duration | time |
+
+> An ECE is "truthy-validated" when its `validator(trigger, output)` returns `true` (boolean form), a non-zero score (scalar form), or a non-empty score vector (vector form). See [`primitives.md`](./primitives.md) for the three canonical validator forms.
 
 ### Interpretation
 
-Under CTI, the operational measurement of a system's cognition is the rate at which it produces decisions that pass a domain-specific validator — not the rate at which it produces outputs.
+Under CTI, the operational measurement of a system's cognition is the rate at which it produces ECEs that pass their attached `validator` — not the rate at which it produces outputs.
 
 This shifts measurement from:
 
 ```
-"Did it produce output?" → "Did it produce validated decisions, and how fast?"
+"Did it produce output?" → "Did it produce validated cognitive events, and how fast?"
 ```
 
 ### Key Properties
 
-- $\Delta D$ counts **validated** decisions only — outputs that do not pass validation do not contribute.
-- Validation is **context-dependent** and **operationally defined**. The protocol does not specify a universal validator; it specifies that one must exist per measurement context.
-- $I_t$ is a **rate**, not an absolute count. Comparing $I_t$ across systems requires matching $\Delta T$ and validation criteria.
+- $\Delta D$ counts **validated** ECEs only — events whose validator returned a falsy score do not contribute.
+- Validation is **part of the event itself** (the `validator` field) rather than an external judgment applied after the fact. This eliminates the v3.0 ambiguity around "who decides what counts as validation."
+- $I_t$ is a **rate**, not an absolute count. Comparing $I_t$ across systems requires matching $\Delta T$ and validator definitions.
 
 ### What This Specification Does Not Claim
 
@@ -78,7 +87,7 @@ This shifts measurement from:
 ### Open Questions
 
 - How is "validation" operationalized across domains? (See Q1.1 in open-questions.md)
-- What is the baseline unit of a "decision"? (See Q1.3; addressed in v3.1 via the **evaluable cognitive event** primitive)
+- ~~What is the baseline unit of a "decision"?~~ **Closed in v3.1.** See [`primitives.md`](./primitives.md).
 - Can $I_t$ be measured in real-time systems without prohibitive overhead? (See Q1.4)
 
 ---
@@ -87,18 +96,24 @@ This shifts measurement from:
 
 ### Statement
 
-The efficiency of a decision system is defined as decision quality per unit cost per unit time.
+The efficiency of a decision system is defined as decision quality per unit cost per unit time, computed over a set of Evaluable Cognitive Events.
 
 ### Formal Expression
 
-$$E_c = \frac{Q}{C \cdot T}$$
+For a set of ECEs $E = \{e_1, e_2, \ldots, e_n\}$ in a measurement window:
+
+$$E_c = \frac{\sum_{e \in E} Q(e)}{\sum_{e \in E} \text{cost}(e) \cdot \text{latency}(e)}$$
 
 | Variable | Definition |
 |----------|-----------|
 | $E_c$ | Efficiency |
-| $Q$ | Decision quality (rubric-scored or task-validated) |
-| $C$ | Computational cost |
-| $T$ | Latency |
+| $Q(e)$ | Quality score of ECE $e$, returned by its `validator` (scalar form) |
+| $\text{cost}(e)$ | The `cost` field of ECE $e$ |
+| $\text{latency}(e)$ | The `latency` field of ECE $e$ |
+
+> Both $\text{cost}$ and $\text{latency}$ are **fields of the ECE itself**. They are not derived externally. This makes $E_c$ directly computable from any well-formed sequence of ECEs.
+
+For boolean-validator ECEs, $Q(e) \in \{0, 1\}$. For vector-validator ECEs, $Q(e)$ is an aggregation function over the score vector — defined per implementation.
 
 ### Interpretation
 
@@ -122,21 +137,21 @@ Together they describe a system's cognitive performance along two axes:
 
 ### Operationalization Requirements
 
-A system claiming CTI compliance must expose:
+A system claiming CTI compliance must emit ECEs (see [`primitives.md`](./primitives.md)) with all five required fields populated. The protocol's measurement layer derives $I_t$ and $E_c$ directly from the stream of ECEs:
 
-| Variable | Required telemetry |
+| Metric input | Source |
 |----------|--------------------|
-| $\Delta D$ | Counter of validated decisions per measurement window |
+| $\Delta D$ | Count of ECEs in window where `validator(e)` is truthy |
 | $\Delta T$ | Window duration |
-| $Q$ | Per-decision quality score, produced by a stated validator or rubric |
-| $C$ | Per-decision computational cost (tokens, compute time, monetary cost, or composite) |
-| $T$ | Per-decision latency |
+| $Q(e)$ | Validator score of ECE $e$ (scalar form) |
+| $\text{cost}(e)$ | `cost` field of ECE $e$ |
+| $\text{latency}(e)$ | `latency` field of ECE $e$ |
 
-The protocol specifies the form. The implementing system specifies the rubric and the validator.
+The protocol specifies the form. The implementing system specifies the validator and the cost/latency units.
 
 ### Open Questions
 
-- How is $Q$ measured formally without circular definitions? (See Q1.2)
+- How is $Q$ measured formally without circular definitions? Partially addressed by the `validator` field of the ECE primitive (see [`primitives.md`](./primitives.md)) — the validator is now a first-class typed function. Domain-specific rubrics remain open (Q1.2).
 - What is the relationship between $E_c$ and energy efficiency in physical hardware?
 - Can $I_t$ and $E_c$ be combined into a single composite score, and should they be?
 
@@ -156,6 +171,7 @@ The retraction does not weaken the specifications. It correctly positions them.
 
 ## Related Documents
 
+- See [`primitives.md`](./primitives.md) for the **Evaluable Cognitive Event** type signature underlying both specifications.
 - See [`formal-model.md`](./formal-model.md) for the bounded-rationality optimization that underlies both specifications.
 - See [`philosophy.md`](./philosophy.md) for the epistemological boundaries of CTI.
 - See [`/research/open-questions.md`](../research/open-questions.md) for the full inventory of unresolved questions.
@@ -163,3 +179,4 @@ The retraction does not weaken the specifications. It correctly positions them.
 ---
 
 *Propose extensions or challenges via the [RFC process](../rfcs/RFC-0001-template.md).*
+ploading protocol.md…]()
