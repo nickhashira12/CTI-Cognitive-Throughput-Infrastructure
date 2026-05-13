@@ -3,7 +3,7 @@ message: "If you use or reference CTI in your research, please cite it as follow
 type: software
 title: "CTI — Cognitive Throughput Infrastructure"
 abstract: "An open measurement protocol for operational cognition in AI decision systems. CTI specifies metrics for cognitive throughput and efficiency, a bounded-rationality formal model, and an explicit epistemological boundary."
-version: 3.0.0
+version: 3.1.0
 date-released: 2026-01-01
 license: CC-BY-4.0
 repository-code: "https://github.com/nickhashira12/CTI-Cognitive-Throughput-Infrastructure"
