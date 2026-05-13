@@ -2,7 +2,7 @@
 
 This document tracks unresolved questions across the CTI framework. It is a living document — questions are added as the framework evolves, and closed when addressed by an accepted RFC or published research.
 
-> **v3.0.0 note.** References to "First Law" and "Second Law" have been replaced with "Specification 1" and "Specification 2" to reflect the protocol reframing. The underlying questions are unchanged.
+> **v3.1.0 note.** Q1.3 is now closed; resolution recorded inline below. References to "First Law" and "Second Law" were replaced with "Specification 1" and "Specification 2" in v3.0.0 to reflect the protocol reframing.
 
 ---
 
@@ -15,8 +15,8 @@ Specification 1 requires counting validated decisions. What constitutes validati
 Specification 2 uses $Q$ as a scalar. Is quality binary, continuous, or multi-dimensional? How is it measured without circular definitions?
 
 **Q1.3 — What is the baseline unit of a "decision"?**
-In LLMs, is a decision a token? A sentence? A response? An action taken by an agent? How does granularity affect $I_t$?
-> *Roadmap: v3.1 addresses this via the **evaluable cognitive event** primitive with type signature `{trigger, output, validator, cost, latency}`.*
+~~In LLMs, is a decision a token? A sentence? A response? An action taken by an agent? How does granularity affect $I_t$?~~
+> ✅ **Closed in v3.1.0.** Resolved by the **Evaluable Cognitive Event** primitive: `{trigger, output, validator, cost, latency}`. See [`/docs/primitives.md`](../docs/primitives.md).
 
 **Q1.4 — Can $I_t$ and $E_c$ be measured in real-time without significant overhead?**
 Measuring cognition at runtime introduces latency. How do we minimize the observability cost of the Cognitive Throughput Layer itself?
@@ -115,4 +115,6 @@ When a question is resolved by an accepted RFC, it will be marked as **Closed** 
 
 ---
 
-*Last updated: 2026 | Open questions: 25*
+*Last updated: 2026 | Open questions: 24 | Closed: 1*
+[open-questions.md](https://github.com/user-attachments/files/27735940/open-questions.md)
+
