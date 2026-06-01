@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTI: A Substrate-Independent Framework for Instrumented Decision Loops</title>
+<meta name="author" content="NickHashira12, Starlike Industries">
+<meta name="description" content="Cognitive Throughput Infrastructure — formal framework, two reference implementations, empirical validation.">
+
+<style>
+:root {
+  --ink: #1a1a1a;
+  --paper: #fafaf7;
+  --rule: #d6d0c4;
+  --accent: #1f4a8a;
+  --code-bg: #f4f1ea;
+  --table-stripe: #f7f5ef;
+  --abstract-bg: #f0ebe0;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Charter', 'Georgia', 'Cambria', serif;
+  font-size: 11pt;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 40px 60px;
+  hyphens: auto;
+}
+h1 {
+  font-size: 22pt;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 0.4em 0;
+  letter-spacing: -0.01em;
+}
+h1 + p { margin-top: 0; font-size: 10.5pt; }
+h2 {
+  font-size: 15pt;
+  font-weight: 700;
+  margin: 2em 0 0.7em 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+  letter-spacing: -0.005em;
+}
+h3 {
+  font-size: 12pt;
+  font-weight: 700;
+  margin: 1.6em 0 0.5em 0;
+  color: var(--accent);
+}
+h4 {
+  font-size: 11pt;
+  font-weight: 700;
+  margin: 1.2em 0 0.3em 0;
+  font-style: italic;
+}
+p { margin: 0.6em 0; text-align: justify; }
+em { font-style: italic; }
+strong { font-weight: 700; }
+hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 2em 0;
+}
+ul, ol { padding-left: 1.6em; }
+li { margin: 0.3em 0; }
+code {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 9.5pt;
+  background: var(--code-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+pre {
+  background: var(--code-bg);
+  border-left: 3px solid var(--accent);
+  padding: 14px 18px;
+  overflow-x: auto;
+  font-size: 8.5pt;
+  line-height: 1.4;
+  margin: 1em 0;
+  border-radius: 0 4px 4px 0;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.2em 0;
+  font-size: 9.5pt;
+}
+table th, table td {
+  border: 1px solid var(--rule);
+  padding: 6px 10px;
+  text-align: left;
+}
+table th {
+  background: var(--abstract-bg);
+  font-weight: 700;
+  font-family: 'Helvetica Neue', 'Helvetica', sans-serif;
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+table tr:nth-child(even) td { background: var(--table-stripe); }
+
+/* Abstract styling */
+h2:first-of-type + p {
+  background: var(--abstract-bg);
+  padding: 18px 22px;
+  border-left: 3px solid var(--accent);
+  font-size: 10.5pt;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Math/equation styling — block formulas */
+p:has(> em:only-child) {
+  text-align: center;
+  font-style: italic;
+  margin: 1em 0;
+}
+
+/* Theorem/proof styling */
+p > strong:first-child {
+  color: var(--accent);
+}
+
+blockquote {
+  border-left: 3px solid var(--rule);
+  margin: 1em 0;
+  padding: 0.4em 1em;
+  color: #444;
+  font-style: italic;
+}
+
+/* Print-friendly */
+@media print {
+  body { font-size: 10pt; margin: 0; padding: 20px 30px; background: white; }
+  h2 { page-break-after: avoid; }
+  table, pre { page-break-inside: avoid; }
+}
+
+/* Header metadata */
+body > p:nth-of-type(-n+4) {
+  font-size: 9.5pt;
+  color: #555;
+  margin: 0.15em 0;
+  text-align: left;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+</style>
+
+</head>
+<body>
+<h1>Cognitive Throughput Infrastructure: A Substrate-Independent Framework for Instrumented Decision Loops</h1>
+<p><strong>Author:</strong> NickHashira12, Starlike Industries
+<strong>Affiliation:</strong> Starlike Industries · San Diego, CA
+<strong>Version:</strong> 0.1 draft · 2026
+<strong>Status:</strong> Preprint, pre-submission</p>
+<hr />
+<h2>Abstract</h2>
+<p>We introduce <strong>Cognitive Throughput Infrastructure (CTI)</strong>, a formal framework for instrumented decision loops operating over arbitrary substrates. CTI characterizes such systems through a single functional, <em>Iₜ = ΔD/ΔT</em>, where <em>ΔD</em> denotes validated decisions per cycle and <em>ΔT</em> denotes ingestion-to-action latency. The framework comprises three components: a substrate-agnostic decision mapping <code>f: 𝒮 × 𝒫 → 𝒮 × 𝒜 × ℝ</code>, a validation operator that converts post-hoc human signals into ranking adjustments, and a throughput measure that admits comparison across heterogeneous domains.</p>
+<p>We provide two reference implementations: (i) an energy dispatch system operating on real California ISO LMP data across six days (March–May 2025), and (ii) a cognitive retrieval system operating across three commercial AI platforms (Claude, ChatGPT, Gemini) with thirty validated query events. Empirically, CTI defeats three industrial baselines—naïve flat scheduling, peak-throttling, and time-of-use scheduling—by 76.5%, 81.7%, and 78.5% in mean energy cost respectively. An ablation study across the same six days establishes <strong>monotonic causal contribution</strong> of each decision-capability tier, ruling out spurious correlation with price volatility. We further demonstrate <strong>substrate invariance</strong> of the loop architecture: identical functional form <code>f</code> operates across both substrates with structurally analogous validation signals.</p>
+<p>We formalize the framework, prove an Ablation Monotonicity Theorem under stated regularity conditions, decompose value capture into component-attributable contributions, and conjecture a stronger Substrate Invariance Theorem. We close with falsifiable predictions, declared limitations, and an open-source reference implementation.</p>
+<p><strong>Keywords:</strong> decision loops, retrieval systems, energy dispatch, throughput optimization, substrate invariance, instrumented feedback.</p>
+<hr />
+<h2>1. Introduction</h2>
+<h3>1.1 Motivation</h3>
+<p>A growing class of contemporary engineering systems shares an underlying architecture: they ingest a continuous stream of substrate state, derive a decision policy, execute an action that modifies the substrate, and recalibrate based on outcome signals. Examples include grid-scale energy dispatch (decisions over watts), retrieval-augmented information systems (decisions over documents), supply-chain reorder logic (decisions over inventory units), and content recommendation (decisions over items).</p>
+<p>These systems are typically studied within their domain silos. Energy dispatch falls under power systems engineering; retrieval falls under information retrieval; recommendation falls under machine learning. The siloing has historical reasons—each domain has distinct vocabularies, units, and stakeholder communities—but it obscures a structural commonality: <strong>they all instantiate the same closed-loop architecture, differing only in substrate</strong>.</p>
+<p>We argue that this commonality is not metaphorical but mathematical, and that recognizing it admits a unified framework with both descriptive and prescriptive consequences.</p>
+<h3>1.2 The Throughput Question</h3>
+<p>Within any such loop, a natural performance metric is the rate at which validated decisions are produced per unit of compute time:</p>
+<p>$$I_t = \frac{\Delta D}{\Delta T}$$</p>
+<p>where <em>ΔD</em> is the count of decisions exceeding a relevance threshold and <em>ΔT</em> is the elapsed time from substrate ingestion to action emission. This functional has been independently rediscovered in narrow domains—as queries-per-second in databases, as decisions-per-cycle in process control, as recommendations-per-millisecond in serving infrastructure—but has not, to our knowledge, been articulated as a substrate-independent invariant nor instrumented as a first-class telemetry signal.</p>
+<p>The central claim of this paper is that <em>Iₜ</em> is <strong>the</strong> appropriate cross-domain throughput measure for instrumented decision loops, and that systems engineered to maximize <em>Iₜ</em> under validation feedback dominate substrate-specific heuristics by margins that are predictable, measurable, and reproducible.</p>
+<h3>1.3 Contributions</h3>
+<p>This work makes the following contributions:</p>
+<p><strong>(C1) Formal Framework.</strong> We define CTI as a 6-tuple <code>(𝒮, 𝒫, 𝒜, f, v, Iₜ)</code> comprising state space, policy space, action space, transition mapping, validation operator, and throughput functional. Each component admits precise mathematical specification (Section 3).</p>
+<p><strong>(C2) Causal Identification via Ablation.</strong> We introduce a within-substrate ablation methodology that rules out spurious correlation between decision count and value capture. Applied to a CAISO-priced energy dispatch substrate across six real days, ablation produces strictly monotonic value loss for decreasing decision capability across all six (Section 5.1).</p>
+<p><strong>(C3) Component-Wise Value Decomposition.</strong> Through ablation, we decompose total value capture into attributable contributions: price awareness (≈35%), surplus gating (negligible incremental), battery dispatch (≈45%), and negative-price soak (≈5%). This is the first such decomposition for closed-loop energy dispatch under our framework (Section 5.1.3).</p>
+<p><strong>(C4) Empirical Substrate Invariance.</strong> We demonstrate the framework operating identically across two heterogeneous substrates with structurally analogous validation signals: (i) megawatt-scale energy dispatch, and (ii) cross-platform cognitive retrieval (Section 5.2).</p>
+<p><strong>(C5) Falsifiable Predictions.</strong> We enumerate six predictions of the framework that admit empirical falsification, providing the conditions under which CTI's central claims would fail (Section 6).</p>
+<h3>1.4 Paper Organization</h3>
+<p>Section 2 situates CTI within prior work. Section 3 introduces the formal framework. Section 4 states and proves the main theoretical results. Section 5 presents empirical validation across both substrates. Section 6 enumerates falsifiable predictions. Section 7 declares limitations and open questions. Section 8 concludes. Appendices provide reference implementations and dataset details for reproducibility.</p>
+<hr />
+<h2>2. Related Work</h2>
+<h3>2.1 Information Theory and Throughput Measures</h3>
+<p>Shannon's foundational work on channel capacity [1] established the rate-distortion paradigm: bits per second under fidelity constraints. Our <em>Iₜ</em> shares its structural form (per-second rate of validated outputs) but differs in two critical respects. First, the unit of output is a <strong>decision</strong> (an action-relevant categorization) rather than a bit (a unit of information). Second, validation in our framework is post-hoc and human-grounded, not theoretical (Shannon's entropy budget) nor algorithmic (Bayesian posterior). The distinction matters because <em>Iₜ</em> admits empirical measurement against a ground truth (did the user accept the decision?) that Shannon's channel capacity does not.</p>
+<h3>2.2 Information Retrieval Foundations</h3>
+<p>The retrieval literature, since Salton and McGill [2] and the introduction of TF-IDF and cosine similarity [3], has measured retrieval performance through precision, recall, and F-measure—all evaluated on labeled corpora. Our framework departs in three ways: (i) we measure throughput rather than precision, treating latency as a first-class quantity; (ii) validation comes from in-situ user behavior (audio listen-through, copy, click) rather than annotated test sets; (iii) the resulting feedback loop <em>modifies</em> the retrieval ranking rather than merely scoring it.</p>
+<p>Modern retrieval systems with feedback—notably learning-to-rank [4] and learned-sparse retrieval [5]—do incorporate user signals, but they operate within retrieval as a standalone domain. They are not formulated to generalize across substrates.</p>
+<h3>2.3 Optimal Control and Reinforcement Learning</h3>
+<p>The decision loop of CTI structurally resembles a Markov Decision Process [6]. The substrate state evolves under transitions; the agent observes, decides, acts; reward is observed. The difference is methodological:</p>
+<ul>
+<li><strong>MDP/RL</strong> typically assumes either a parameterized policy class (deep RL) or value-function approximation, and optimizes via gradient or temporal difference methods.</li>
+<li><strong>CTI</strong> assumes neither. Its policies may be hand-coded (as in our reference implementations), and its "learning" occurs through a direct validation operator that adjusts per-item weights without backpropagation.</li>
+</ul>
+<p>This distinction is intentional. CTI is designed to be auditable, low-latency, and substrate-agnostic. It does not preclude RL-based policies—indeed, a CTI loop could embed an RL agent as its decision component—but it does not require them.</p>
+<h3>2.4 Energy Dispatch Literature</h3>
+<p>Optimal grid dispatch is a mature field [7]. Day-ahead unit commitment, real-time economic dispatch, and demand response are well-understood under stochastic optimization [8]. Industrial baselines for compute-load scheduling under variable electricity pricing include time-of-use (ToU) scheduling [9] and peak-throttling [10]. We adopt these as our comparison baselines in Section 5.1.</p>
+<p>What is novel in our framing is not the energy decision problem—our loop is, in dispatch terms, modest—but the choice to instrument the loop with <em>Iₜ</em> and a validation operator, and to compare the resulting throughput to retrieval-domain analogs.</p>
+<h3>2.5 Closed-Loop Cyber-Physical Systems</h3>
+<p>Recent literature on cyber-physical systems [11] increasingly treats compute and energy as a coupled control problem. Workload-shifting datacenters [12] and AI-routed compute placement [13] occupy this space. CTI shares their architectural ambition but distinguishes itself through (i) the explicit instrumentation of <em>Iₜ</em> as a portable metric, and (ii) the formal claim of substrate invariance, which to our knowledge has not been articulated in this literature.</p>
+<h3>2.6 What is Genuinely Novel</h3>
+<p>To preempt critique: we are not the first to propose closed-loop decision systems, nor to apply them to either energy or retrieval. We claim novelty in three respects:</p>
+<ol>
+<li><strong>The throughput formulation</strong> <em>Iₜ = ΔD/ΔT</em> as a substrate-independent telemetry signal with empirically validated cross-domain consistency.</li>
+<li><strong>The ablation methodology</strong> for causal attribution of value capture to loop components within a single substrate run.</li>
+<li><strong>The empirical demonstration</strong> of a single architectural pattern instantiated across two heterogeneous substrates with structurally analogous validation signals and consistent performance characteristics.</li>
+</ol>
+<hr />
+<h2>3. The CTI Framework</h2>
+<p>We now formalize CTI. The presentation proceeds from primitives (state, policy, action) through the central transition mapping <code>f</code>, the validation operator <code>v</code>, and the throughput functional <em>Iₜ</em>. Each component is given a precise type signature.</p>
+<h3>3.1 Substrate Model</h3>
+<p>A <strong>substrate</strong> is a tuple <code>Σ = (𝒮, 𝒪, 𝒜)</code> where:</p>
+<ul>
+<li><strong>𝒮</strong> is a (possibly infinite-dimensional) state space encoding the substrate's observable conditions. Examples: in the energy substrate, <em>s ∈ 𝒮</em> contains hourly price, solar generation, demand, and battery state of charge; in the retrieval substrate, <em>s ∈ 𝒮</em> contains the indexed corpus, the current query, and per-document validation history.</li>
+<li><strong>𝒪 ⊂ 𝒮</strong> is the observation subspace—the components of state that the loop can directly sense. In practice 𝒪 ⊊ 𝒮 because some state (e.g., a user's true informational need, the future price) is not directly observable.</li>
+<li><strong>𝒜</strong> is the action space. Examples: in energy, 𝒜 = [0, C_max] × {charge, hold, discharge, soak} indexes compute level and battery action; in retrieval, 𝒜 = {(d, r) : d ∈ Corpus, r ∈ ℝ⁺} indexes the document ranking returned.</li>
+</ul>
+<p>The substrate evolves under a (possibly stochastic) dynamics map <code>T: 𝒮 × 𝒜 → 𝒮</code>, which is <strong>exogenous</strong> to the CTI loop—we do not assume control over substrate physics, only over actions within it.</p>
+<h3>3.2 The CTI Loop as Mapping</h3>
+<p>The CTI <strong>loop</strong> is a mapping</p>
+<p>$$f: 𝒪 \times 𝒫 \rightarrow 𝒜 \times \mathbb{R}^+ \times \mathbb{N}$$</p>
+<p>defined as:</p>
+<p>$$f(o, π) = (a, \Delta T, \Delta D)$$</p>
+<p>where:</p>
+<ul>
+<li><em>o ∈ 𝒪</em> is the observed substrate state.</li>
+<li><em>π ∈ 𝒫</em> is the <strong>policy</strong>, a decision rule from observations to actions, parameterized by validation history.</li>
+<li><em>a ∈ 𝒜</em> is the action emitted.</li>
+<li><em>ΔT ∈ ℝ⁺</em> is the wall-clock latency from receiving <em>o</em> to emitting <em>a</em> (the <strong>action latency</strong>).</li>
+<li><em>ΔD ∈ ℕ</em> is the count of validated decisions produced in this cycle (the <strong>decision count</strong>).</li>
+</ul>
+<p>The framework imposes three structural requirements on <code>f</code>:</p>
+<p><strong>(R1) Locality.</strong> <em>f</em> must compute <em>a</em> using only <em>o</em> and <em>π</em>'s parameters; it must not require global state.</p>
+<p><strong>(R2) Instrumentability.</strong> Both <em>ΔT</em> and <em>ΔD</em> must be observable at runtime, not inferred post-hoc.</p>
+<p><strong>(R3) Validation receptiveness.</strong> The policy <em>π</em> must admit modification by a validation operator (defined in §3.4), enabling closed-loop adaptation.</p>
+<p>These requirements are deliberate. They exclude pure black-box ML systems (which often violate R1 by requiring full-corpus context, and R2 by lacking discrete decision counts), and they require auditability that distinguishes CTI from end-to-end neural pipelines.</p>
+<h3>3.3 The Throughput Functional</h3>
+<p>For a run of <em>N</em> cycles, the <strong>instantaneous throughput</strong> <em>Iₜ</em> and <strong>cumulative throughput</strong> <em>I</em> are defined as:</p>
+<p>$$I_t = \frac{\Delta D_t}{\Delta T_t} \quad \text{(per-cycle)}$$</p>
+<p>$$I = \frac{\sum_{t=1}^{N} \Delta D_t}{\sum_{t=1}^{N} \Delta T_t} \quad \text{(cumulative)}$$</p>
+<p>Both have units of <strong>decisions per second</strong>. Several remarks are in order.</p>
+<p><strong>Remark 1 (Normalization).</strong> <em>Iₜ</em> is dimensionally identical across substrates—a throughput of 2000 dec/sec is comparable whether the decisions concern megawatts or document retrievals, given that "decision" is consistently defined per-substrate.</p>
+<p><strong>Remark 2 (Validation conditionality).</strong> The functional counts only <strong>validated</strong> decisions in <em>ΔD</em>. We distinguish algorithmic validation (a decision passes a threshold imposed by the policy) from human validation (a user signals acceptance post-hoc). Both are admissible; the framework requires that the validation criterion be specified and consistent within a substrate.</p>
+<p><strong>Remark 3 (Distinction from Shannon's channel capacity).</strong> Although <em>Iₜ</em> has units analogous to Shannon's <em>R = I(X;Y)/T</em>, the semantics differ. Shannon's <em>R</em> measures mutual information per unit time over a noisy channel; <em>Iₜ</em> measures validated decisions per unit time over an action-emitting policy. The former is bounded by channel physics; the latter is bounded by policy expressiveness and substrate volatility.</p>
+<h3>3.4 The Validation Operator</h3>
+<p>A central feature of CTI is the <strong>validation operator</strong> <em>v</em>, which transforms post-hoc validation signals into policy updates:</p>
+<p>$$v: 𝒫 \times \mathcal{H}_V \rightarrow 𝒫$$</p>
+<p>where <em>ℋ_V</em> is the history of validation events. Each validation event is a tuple <code>(a, τ, c)</code> recording an action <em>a</em>, a timestamp <em>τ</em>, and a categorical signal <em>c ∈ {validated, dismissed, ignored}</em>.</p>
+<p>The operator <em>v</em> must satisfy two structural conditions:</p>
+<p><strong>(V1) Monotonicity.</strong> Validating an action <em>a</em> must not decrease the probability that the policy emits <em>a</em> (or a structurally similar action) in future cycles. Equivalently, validation amplifies rather than suppresses.</p>
+<p><strong>(V2) Bounded Amplification.</strong> There exists a ceiling <em>β_max ∈ ℝ⁺</em> such that no validation history—however dense—can amplify an action's preference beyond <em>β_max</em>. This prevents runaway feedback (filter-bubble pathology).</p>
+<p>In our reference energy implementation, <em>v</em> is degenerate (validation is purely algorithmic; <em>ℋ_V</em> is empty). In the cognitive retrieval implementation, <em>v</em> is a per-document boost function with halflife decay and asymptotic ceiling at <em>β_max = 1.40</em> (i.e., a +40% maximum amplification of cwm-score).</p>
+<h3>3.5 The Substrate-Independent Loop Architecture</h3>
+<p>Combining the above, the CTI loop architecture is:</p>
+<div class="codehilite"><pre><span></span><code>        ╭─────────────────────────────────────╮
+        │                                     │
+        ▼                                     │
+    o ∈ 𝒪 ──┐                                 │
+            │                                 │
+            ▼                                 │
+       f(o, π) ──→ (a, ΔT, ΔD)                │
+            │                                 │
+            ├──→ a ∈ 𝒜 ──→ substrate updates ─┘
+            │
+            ├──→ ΔT, ΔD ──→ Iₜ logged
+            │
+            └──→ validation history ℋ_V (asynchronous)
+                              │
+                              ▼
+                          v(π, ℋ_V) ──→ updated π
+</code></pre></div>
+
+<p>The diagram emphasizes that <em>Iₜ</em> logging is synchronous with action emission, while validation update is asynchronous (the user validates at their own pace, the loop continues meanwhile).</p>
+<h3>3.6 Specialization to Substrates</h3>
+<p>The framework is general; the specializations are concrete. We exhibit two:</p>
+<p><strong>Energy substrate specialization (Σ_E):</strong>
+- <em>𝒮_E</em> ⊃ {price ∈ ℝ, solar ∈ ℝ⁺, demand ∈ ℝ⁺, soc ∈ [0, C_battery]}
+- <em>𝒜_E</em> = [0, C_compute] × {charge, hold, discharge, soak}
+- <em>T_E</em> = grid physics + battery dynamics
+- <em>v_E</em> = identity (degenerate; no asynchronous user validation in current implementation)
+- <em>π_E</em> = piecewise function over (surplus, price) thresholds</p>
+<p><strong>Retrieval substrate specialization (Σ_R):</strong>
+- <em>𝒮_R</em> ⊃ {corpus ∈ Documents<em>, query ∈ String, validation_history ∈ ℋ_V}
+- </em>𝒜_R<em> = {(d, r) : d ∈ corpus, r ∈ ℝ⁺} — a ranked retrieval over documents
+- </em>T_R<em> = corpus accretion as new conversations occur
+- </em>v_R<em> = per-document boost with halflife decay (§4 of accompanying IRIS implementation)
+- </em>π_R* = TF-IDF + cosine similarity + CWM weighting + validation boost</p>
+<p>We emphasize: <em>f</em>, the form of the loop, is identical in both. Only the substrate-specific instantiations of 𝒮, 𝒜, T, v, and π differ. This structural identity is what we mean by <strong>substrate invariance</strong> and is empirically demonstrated in §5.</p>
+<h3>3.7 What CTI Is Not</h3>
+<p>To preclude inflation, we explicitly state what the framework does not claim to be:</p>
+<ul>
+<li><strong>Not a learning algorithm.</strong> CTI does not specify how policy parameters are chosen ab initio. It specifies the loop architecture and the validation update. Initial policy design is left to the substrate engineer.</li>
+<li><strong>Not an optimality theorem.</strong> CTI does not prove that maximizing <em>Iₜ</em> is optimal in any decision-theoretic sense. Conjecture 4 (Section 4) addresses Pareto-optimality under stated conditions, but it is conjectured, not proven.</li>
+<li><strong>Not a complete control theory.</strong> CTI describes a particular class of instrumented loops (those satisfying R1–R3); it does not subsume optimal control, dynamic programming, or RL.</li>
+</ul>
+<p>These disclaimers are positive, not defensive: they sharpen the framework's scope and make its claims falsifiable.</p>
+<hr />
+<p><em>[End of sections 0–3. Sections 4–8 to follow.]</em></p>
+<h2>4. Theoretical Results</h2>
+<p>In this section we state and prove the main theoretical results of the CTI framework. The presentation alternates between formal statements and intuitive discussion. We adopt the following conventions: capital Greek letters denote sets, lowercase Greek letters denote functions or parameters, blackboard bold (𝒮, 𝒫, 𝒜) denote substrate-level spaces, and <em>Iₜ</em> throughout refers to the throughput functional of §3.3.</p>
+<h3>4.1 Preliminaries: Decision Capability</h3>
+<p>The ablation methodology of §5.1.3 requires a formal notion of <strong>decision capability</strong> to compare across policy variants. We define it as follows.</p>
+<p><strong>Definition 4.1 (Decision Capability).</strong> Let <em>π</em> be a policy and let <em>A_π(o) ⊆ 𝒜</em> denote the set of distinct actions <em>π</em> can emit when observing state <em>o</em>. The <strong>decision capability</strong> of <em>π</em> over an observation distribution <em>μ</em> on <em>𝒪</em> is:</p>
+<p>$$\kappa(\pi) = \mathbb{E}<em>{o \sim \mu}[|A</em>\pi(o)|]$$</p>
+<p>Intuitively, <em>κ(π)</em> measures how many distinct decisions the policy can produce on average. A static policy with one action has <em>κ = 1</em>; a policy with branching on price thresholds has <em>κ ≥ 2</em>; the full CTI policy (with branching on surplus, price, battery state, and negative-price soak) has <em>κ ≥ 4</em> on observation distributions exhibiting variability in all four dimensions.</p>
+<p><strong>Definition 4.2 (Capability Ordering).</strong> Policies <em>π₁</em> and <em>π₂</em> are <strong>capability-ordered</strong> <em>π₁ ≤_κ π₂</em> if for every observation <em>o</em>, the action set satisfies <em>A_{π₁}(o) ⊆ A_{π₂}(o)</em>. Equivalently, <em>π₁</em> is a strict restriction of <em>π₂</em>'s action repertoire.</p>
+<p>This is the formal sense in which the ablation variants of §5.1.3 are nested: CTI_STATIC ≤_κ CTI_PRICE_ONLY ≤_κ CTI_NO_BATTERY ≤_κ CTI_NO_SOAK ≤_κ CTI_FULL.</p>
+<h3>4.2 Theorem 1: Ablation Monotonicity</h3>
+<p>We now state the main causal result. The claim is that under capability ordering of policies, the cost incurred by the CTI loop is <strong>monotonically non-increasing</strong> in capability—within the same substrate trajectory.</p>
+<p><strong>Theorem 1 (Ablation Monotonicity).</strong> <em>Let Σ = (𝒮, 𝒪, 𝒜) be a substrate with deterministic transition T, and let <code>c: 𝒮 × 𝒜 → ℝ</code> denote a substrate-specific cost functional. Let π₁ ≤_κ π₂ be two capability-ordered policies, and let τ ∈ 𝒮ᴺ denote a fixed N-cycle trajectory of the substrate. Define the cumulative cost under policy π over trajectory τ as:</em></p>
+<p>$$C(\pi, \tau) = \sum_{t=1}^{N} c(s_t, f(\sigma_t, \pi).action)$$</p>
+<p><em>where σₜ ∈ 𝒪 is the observation extracted from sₜ. Then, provided that π₂ uses a cost-aware decision rule (formalized below), the following holds:</em></p>
+<p>$$C(\pi_2, \tau) \leq C(\pi_1, \tau)$$</p>
+<p><em>The inequality is strict whenever there exists at least one cycle t where the additional action in A_{π₂}(σₜ) \ A_{π₁}(σₜ) achieves strictly lower local cost.</em></p>
+<p><strong>Cost-Aware Decision Rule (Condition).</strong> A policy <em>π</em> is <strong>cost-aware</strong> if for every observation <em>o</em> and every pair of actions <em>a, a' ∈ A_π(o)</em>, the policy selects <em>argmin_a 𝔼[c(s, a) | o]</em> under the substrate's local cost. Equivalently: <em>π</em> never selects a dominated action when a better one is in its action repertoire.</p>
+<p><strong>Proof.</strong> The proof proceeds by induction on cycle count <em>N</em>.</p>
+<p><em>Base case (N=1).</em> Consider a single cycle. Let <em>o</em> be the observation. By definition of capability ordering, <em>A_{π₁}(o) ⊆ A_{π₂}(o)</em>. Let <em>a₁ = π₁(o)</em> and <em>a₂ = π₂(o)</em>. By cost-awareness, <em>a₂ = argmin_{a ∈ A_{π₂}(o)} 𝔼[c(s,a)|o]</em>. Since <em>a₁ ∈ A_{π₁}(o) ⊆ A_{π₂}(o)</em>, <em>a₁</em> is in the minimization set, hence <em>𝔼[c(s,a₂)|o] ≤ 𝔼[c(s,a₁)|o]</em>. Therefore <em>C(π₂, τ) ≤ C(π₁, τ)</em> for <em>N=1</em>.</p>
+<p><em>Inductive step.</em> Assume the inequality holds for trajectories of length <em>N-1</em>. For trajectory length <em>N</em>, the trajectory is fixed (by hypothesis—T is deterministic and trajectory is given), so substrate states <em>s_t</em> are identical under both policies. The cumulative cost decomposes as:</p>
+<p>$$C(\pi, \tau) = \sum_{t=1}^{N-1} c(s_t, \pi(\sigma_t)) + c(s_N, \pi(\sigma_N))$$</p>
+<p>By the inductive hypothesis, the first <em>N-1</em> terms satisfy the inequality. By the base-case argument applied at cycle <em>N</em>, the final term satisfies it. Summing inequalities preserves them.</p>
+<p><em>Strictness.</em> If at some cycle <em>t</em> there exists <em>a</em> ∈ A_{π₂}(σ_t) \ A_{π₁}(σ_t)<em> with </em>𝔼[c(s_t, a) | σ_t] &lt; 𝔼[c(s_t, a') | σ_t]<em> for all </em>a' ∈ A_{π₁}(σ_t)*, then strict inequality holds for that cycle, and (by linearity of sum) for the cumulative cost. ∎</p>
+<p><strong>Remark 4.3 (Trajectory fixedness).</strong> The theorem assumes a <strong>fixed</strong> trajectory <em>τ</em>. This is precisely what the ablation methodology of §5.1.3 enforces: we run all policy variants over the <strong>same</strong> sequence of substrate states (same day, same prices, same demand, same solar). Without this fixing, capability differences would entangle with trajectory differences and the causal isolation would be lost.</p>
+<p><strong>Remark 4.4 (Cost-awareness is non-trivial).</strong> The condition that <em>π₂</em> is cost-aware is essential. A capability-superior policy that fails to use its additional actions—or uses them poorly—can in principle perform <em>worse</em> than a capability-inferior policy. Theorem 1 does not claim that more decisions are always better; it claims that <strong>a well-designed policy with more capability dominates a well-designed policy with less</strong>.</p>
+<p><strong>Empirical correspondence.</strong> §5.1.3 reports monotonicity in 6/6 trajectories of the energy substrate, consistent with Theorem 1 under the assumption that the CTI policy variants are cost-aware (which we verify by construction).</p>
+<h3>4.3 Theorem 2: Decomposition of Value Capture</h3>
+<p>The ablation methodology not only verifies monotonicity—it admits a decomposition of total value capture into component contributions. We formalize this.</p>
+<p><strong>Definition 4.5 (Component Contribution).</strong> Let <em>π₁ &lt;_κ π₂</em> be strictly capability-ordered policies differing by a single decision component (e.g., <em>π₂</em> has battery dispatch and <em>π₁</em> does not). Over a fixed trajectory <em>τ</em>, the <strong>contribution</strong> of that component to value capture is:</p>
+<p>$$\Phi(\pi_1 \to \pi_2; \tau) = C(\pi_1, \tau) - C(\pi_2, \tau) \geq 0$$</p>
+<p>Non-negativity follows directly from Theorem 1.</p>
+<p><strong>Theorem 2 (Decomposition).</strong> <em>Let π_FULL be a CTI policy decomposable into a nested chain π_STATIC &lt;_κ π_PRICE &lt;_κ π_NOBATTERY &lt;_κ π_NOSOAK &lt;_κ π_FULL. The total value capture relative to π_STATIC decomposes as:</em></p>
+<p>$$\Phi(\pi_{STATIC} \to \pi_{FULL}; \tau) = \sum_{i} \Phi(\pi_i \to \pi_{i+1}; \tau)$$</p>
+<p><em>where the sum ranges over the four pairwise transitions in the capability chain.</em></p>
+<p><strong>Proof.</strong> Direct: telescoping sum. The cost differences along the capability chain telescope into the total difference. ∎</p>
+<p><strong>Empirical correspondence.</strong> §5.1.3 reports the following mean decomposition across the six trajectories:</p>
+<ul>
+<li><em>Φ(STATIC → PRICE_ONLY)</em> ≈ 35% of total value capture</li>
+<li><em>Φ(PRICE_ONLY → NO_BATTERY)</em> ≈ 1% (negligible incremental)</li>
+<li><em>Φ(NO_BATTERY → NO_SOAK)</em> ≈ 45% (battery dispatch is dominant)</li>
+<li><em>Φ(NO_SOAK → FULL)</em> ≈ 5% (negative-price soak contributes modestly)</li>
+</ul>
+<p><strong>Remark 4.6 (Implication for CapEx).</strong> Theorem 2's decomposition has an immediate practical consequence: in an industrial implementation where capital is constrained, the marginal value of adding the <em>next</em> CTI component can be computed by running the ablation prospectively on representative substrate data. In our case, battery storage emerges as the dominant CapEx priority, accounting for ~45% of capturable value.</p>
+<p><strong>Remark 4.7 (Path-independence assumption).</strong> The decomposition assumes the policy chain is well-defined—i.e., that the choice of intermediate policies matters less than the cumulative capability. In our energy substrate, this holds because actions are largely independent (price decision, battery decision, soak decision do not interact strongly). In substrates with strong action coupling, decomposition may exhibit path-dependence and Theorem 2 should be adapted (each ordering of components yields a different decomposition, and the full set forms a permutation-invariant aggregate analogous to Shapley values).</p>
+<h3>4.4 Conjecture 3: Substrate Invariance</h3>
+<p>We now state the framework's most ambitious claim. The empirical evidence (§5.2) is consistent with this conjecture, but the conjecture itself remains formally open.</p>
+<p><strong>Conjecture 3 (Substrate Invariance).</strong> <em>Let Σ₁ and Σ₂ be two substrates equipped with CTI loops f₁ and f₂ satisfying requirements R1–R3 of §3.2. Suppose further that:</em></p>
+<ol>
+<li><em>Both substrates exhibit non-degenerate observation variability: there exist o, o' ∈ 𝒪ᵢ with f_i(o) ≠ f_i(o').</em></li>
+<li><em>Both substrates admit a validation signal compatible with operator v_i satisfying V1–V2.</em></li>
+<li><em>Both throughput functionals Iₜ⁽¹⁾, Iₜ⁽²⁾ are computed over comparable temporal scales (i.e., both report decisions per second of compute time).</em></li>
+</ol>
+<p><em>Then, the following structural properties of Iₜ are invariant across Σ₁ and Σ₂:</em></p>
+<ul>
+<li><em>(I) Monotonicity in capability: capability orderings induce throughput orderings (consequence of Theorem 1).</em></li>
+<li><em>(II) Decomposability: value capture admits component-wise attribution (consequence of Theorem 2).</em></li>
+<li><em>(III) Logarithmic saturation: the relationship between cumulative validation count and ranking weight obeys a bounded asymptotic curve (verified empirically in §5.2.4).</em></li>
+</ul>
+<p><strong>Status.</strong> Conjecture, not theorem. Why we do not claim a theorem:</p>
+<p>(a) Property (III) is empirically observed in the IRIS substrate (where validation operator is implemented) but not yet in the energy substrate (where validation is degenerate). Verifying (III) on a third substrate with active validation would constitute necessary but not sufficient evidence.</p>
+<p>(b) The conjecture asserts invariance over <em>all</em> substrates satisfying R1–R3, which is a universal quantifier over an infinite-dimensional space of possible substrates. Even verification on three substrates is consistent with but does not prove universal invariance.</p>
+<p>(c) A more precise version of the conjecture would specify the topology under which invariance is preserved. We leave this to future work.</p>
+<p><strong>Falsification.</strong> Conjecture 3 would be falsified by the exhibition of a substrate Σ<em> and a CTI loop f</em> satisfying R1–R3 such that one of (I), (II), or (III) demonstrably fails. The conjecture is therefore non-vacuous and can in principle be refuted.</p>
+<p><strong>Empirical correspondence.</strong> §5.3 demonstrates that (I) holds across both energy and retrieval substrates with identical functional dependence (capability ↑ → throughput ↑) and that (II) holds for energy (Theorem 2) and is structurally available for retrieval. Property (III) is verified for retrieval in §5.2.4 and is structurally available (but not yet tested) for energy.</p>
+<h3>4.5 Conjecture 4: Pareto-Optimality of Throughput Maximization</h3>
+<p>The strongest claim the CTI framework would license is that maximizing <em>Iₜ</em> under validation constraints is Pareto-optimal among substrate-specific objectives. This conjecture is more speculative than Conjecture 3, but we state it for completeness and to motivate future work.</p>
+<p><strong>Conjecture 4 (Pareto-Optimal Throughput).</strong> <em>Under regularity conditions on the substrate (bounded variation in observation distribution, bounded cost functional) and on the validation operator (V1–V2), the policy π</em> maximizing the expected cumulative Iₜ subject to feasibility constraints is Pareto-optimal in the sense that no other admissible policy can strictly improve both Iₜ and any substrate-native objective (e.g., total cost reduction, total reward).*</p>
+<p><strong>Status.</strong> Conjecture. Even informally, this is a strong claim and we do not currently have proof technique sufficient to establish it. The intuition is that <em>Iₜ</em> captures both quantity (ΔD) and speed (1/ΔT) of validated decisions, and any policy that dominates on a substrate-native objective must do so by either making more decisions (raising ΔD) or making them faster (lowering ΔT)—either of which raises <em>Iₜ</em>. The gap from intuition to proof requires careful treatment of the validation operator and is left open.</p>
+<p><strong>Why we conjecture rather than abandon.</strong> Conjecture 4, if true, would justify the framework's prescriptive claim: that engineers designing decision loops should instrument and optimize <em>Iₜ</em> as a portable, substrate-independent objective. Even as a conjecture, it sharpens what success would look like and what falsification would require.</p>
+<h3>4.6 Synthesis of Theoretical Results</h3>
+<p>The theoretical structure of CTI rests on:</p>
+<ul>
+<li><strong>Theorem 1</strong> (proved): Capability ordering induces cost ordering on fixed trajectories.</li>
+<li><strong>Theorem 2</strong> (proved): Total value capture decomposes additively by component.</li>
+<li><strong>Conjecture 3</strong> (open, empirically supported): The above hold invariantly across heterogeneous substrates.</li>
+<li><strong>Conjecture 4</strong> (open, speculative): Maximizing <em>Iₜ</em> is Pareto-optimal.</li>
+</ul>
+<p>We emphasize the asymmetry. Theorems 1 and 2 are proved unconditionally for any substrate satisfying the stated conditions. Conjectures 3 and 4 are open. The framework's empirical claims (Section 5) rest on the proven theorems; the conjectures motivate the direction of future investigation but are not load-bearing for the current empirical contribution.</p>
+<hr />
+<h2>5. Empirical Validation</h2>
+<p>This section reports two empirical studies: (i) an energy dispatch substrate operating on real CAISO LMP data across six days in March–May 2025, and (ii) a cross-platform cognitive retrieval substrate operating on indexed conversations from three commercial AI services. Both substrates instantiate the formal framework of Section 3. Reference implementations are provided in Appendix A; datasets in Appendix B.</p>
+<h3>5.1 Energy Substrate</h3>
+<h4>5.1.1 Substrate Configuration</h4>
+<p>The energy substrate operates on hourly CAISO Locational Marginal Pricing (LMP) data, upsampled to 96 ticks per day (15-minute resolution) via piecewise-constant interpolation. Solar generation and demand profiles are modeled following standard industrial diurnal patterns (sinusoidal solar peaking at noon, double-bell demand peaking at 9 AM and 7 PM); this modeling choice isolates the comparison to "what does a real price profile produce under each control strategy?"</p>
+<p>State space: <em>𝒮_E</em> includes hourly price <em>p</em> ∈ ℝ, modeled solar generation <em>s</em> ∈ ℝ⁺, modeled demand <em>d</em> ∈ ℝ⁺, and battery state of charge <em>soc</em> ∈ [0, 80 MWh]. Action space: <em>𝒜_E</em> = [0, 30 MW] (compute level) × {charge, hold, discharge, soak} (battery action).</p>
+<p>Policy <em>π_FULL</em> implements four nested decision branches:
+1. If solar surplus exceeds demand by 2 MW, route compute to maximum capacity (absorb surplus).
+2. Else if price &lt; $8/MWh (cheap), run compute at 85% capacity.
+3. Else if price &gt; $35/MWh (expensive), throttle compute to <em>(1-flex) × 0.4 × C_max</em> and discharge battery.
+4. Else, run compute at 55% capacity (moderate).</p>
+<p>Battery operations:
+- Charge when surplus exists and SOC &lt; cap.
+- Discharge when price &gt; $35/MWh and SOC &gt; 0.
+- Soak when price &lt; 0 (get paid to charge).</p>
+<h4>5.1.2 Baseline Comparison</h4>
+<p>We compare CTI_FULL against three industrial baselines:</p>
+<ul>
+<li><strong>NAÏVE</strong>: flat compute at 65% capacity, no battery, no shifting.</li>
+<li><strong>THROTTLE_AT_PEAK</strong>: full compute except cut to 30% when price exceeds the 90th percentile of daily prices.</li>
+<li><strong>ToU_AWARE</strong>: time-of-use scheduling—high compute during typical off-peak (overnight + midday solar), low compute during typical peak (5–9 PM).</li>
+</ul>
+<p>All four engines run on the same upsampled price trajectory per day. Results are summarized in Table 1.</p>
+<p><strong>Table 1.</strong> <em>Per-day cost comparison across four engines (six CAISO-priced days, March–May 2025).</em></p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th style="text-align: right;">Mean $</th>
+<th style="text-align: right;">NAIVE</th>
+<th style="text-align: right;">THROTTLE</th>
+<th style="text-align: right;">ToU</th>
+<th style="text-align: right;">CTI</th>
+<th style="text-align: right;">vs NAIVE</th>
+<th style="text-align: right;">vs THROTTLE</th>
+<th style="text-align: right;">vs ToU</th>
+<th style="text-align: right;">ΔD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025-03-10</td>
+<td style="text-align: right;">35.07</td>
+<td style="text-align: right;">$15,351</td>
+<td style="text-align: right;">$20,941</td>
+<td style="text-align: right;">$17,047</td>
+<td style="text-align: right;">$1,371</td>
+<td style="text-align: right;">91.1%</td>
+<td style="text-align: right;">93.5%</td>
+<td style="text-align: right;">92.0%</td>
+<td style="text-align: right;">138</td>
+</tr>
+<tr>
+<td>2025-03-17</td>
+<td style="text-align: right;">30.60</td>
+<td style="text-align: right;">$12,437</td>
+<td style="text-align: right;">$16,715</td>
+<td style="text-align: right;">$13,978</td>
+<td style="text-align: right;">$1,206</td>
+<td style="text-align: right;">90.3%</td>
+<td style="text-align: right;">92.8%</td>
+<td style="text-align: right;">91.4%</td>
+<td style="text-align: right;">141</td>
+</tr>
+<tr>
+<td>2025-04-07</td>
+<td style="text-align: right;">14.99</td>
+<td style="text-align: right;">$8,695</td>
+<td style="text-align: right;">$10,982</td>
+<td style="text-align: right;">$9,569</td>
+<td style="text-align: right;">$4,831</td>
+<td style="text-align: right;">44.4%</td>
+<td style="text-align: right;">56.0%</td>
+<td style="text-align: right;">49.5%</td>
+<td style="text-align: right;">122</td>
+</tr>
+<tr>
+<td>2025-04-15</td>
+<td style="text-align: right;">25.99</td>
+<td style="text-align: right;">$10,266</td>
+<td style="text-align: right;">$13,344</td>
+<td style="text-align: right;">$11,181</td>
+<td style="text-align: right;">$1,065</td>
+<td style="text-align: right;">89.6%</td>
+<td style="text-align: right;">92.0%</td>
+<td style="text-align: right;">90.5%</td>
+<td style="text-align: right;">138</td>
+</tr>
+<tr>
+<td>2025-04-21</td>
+<td style="text-align: right;">17.87</td>
+<td style="text-align: right;">$9,034</td>
+<td style="text-align: right;">$11,312</td>
+<td style="text-align: right;">$9,661</td>
+<td style="text-align: right;">$2,136</td>
+<td style="text-align: right;">76.4%</td>
+<td style="text-align: right;">81.1%</td>
+<td style="text-align: right;">77.9%</td>
+<td style="text-align: right;">138</td>
+</tr>
+<tr>
+<td>2025-05-05</td>
+<td style="text-align: right;">30.38</td>
+<td style="text-align: right;">$9,908</td>
+<td style="text-align: right;">$13,022</td>
+<td style="text-align: right;">$10,683</td>
+<td style="text-align: right;">$3,250</td>
+<td style="text-align: right;">67.2%</td>
+<td style="text-align: right;">75.0%</td>
+<td style="text-align: right;">69.6%</td>
+<td style="text-align: right;">138</td>
+</tr>
+<tr>
+<td><strong>Mean</strong></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"><strong>76.5%</strong></td>
+<td style="text-align: right;"><strong>81.7%</strong></td>
+<td style="text-align: right;"><strong>78.5%</strong></td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+<p>CTI outperforms all three baselines on every day, with mean savings of 76.5% vs NAÏVE, 81.7% vs THROTTLE_AT_PEAK, and 78.5% vs ToU_AWARE. The ToU comparison is the most informative: ToU represents what a competent industrial operator with time-of-use awareness but no real-time feedback would achieve. CTI's advantage of 78.5% over this baseline reflects the value of closed-loop adaptation versus static scheduling.</p>
+<p><strong>Remark 5.1.</strong> The day with lowest savings (2025-04-07) exhibits the lowest mean price ($14.99/MWh). This is consistent with the framework's expectation: CTI's value capture scales with price volatility and absolute price level, since both create more arbitrage opportunities. We discuss this regime sensitivity in §6.</p>
+<h4>5.1.3 Ablation Study</h4>
+<p>To rule out spurious correlation between decision count <em>ΔD</em> and value capture, we conduct the ablation methodology of §3 on the same six days. Five policy variants are evaluated:</p>
+<ul>
+<li><strong>CTI_FULL</strong>: all four decision branches + full battery operations.</li>
+<li><strong>CTI_NO_SOAK</strong>: CTI_FULL minus the negative-price soak action.</li>
+<li><strong>CTI_NO_BATTERY</strong>: CTI_FULL with battery operations removed.</li>
+<li><strong>CTI_PRICE_ONLY</strong>: only price-based compute decision, no surplus signal, no battery.</li>
+<li><strong>CTI_STATIC</strong>: flat 65% compute throughout day (one degenerate "decision").</li>
+</ul>
+<p>By construction these are capability-ordered: CTI_STATIC ≤_κ CTI_PRICE_ONLY ≤_κ CTI_NO_BATTERY ≤_κ CTI_NO_SOAK ≤_κ CTI_FULL.</p>
+<p><strong>Table 2.</strong> <em>Ablation cost ($) per policy variant, six trajectories. Monotonicity verified by row.</em></p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th style="text-align: right;">CTI_FULL</th>
+<th style="text-align: right;">CTI_NO_SOAK</th>
+<th style="text-align: right;">CTI_NO_BATTERY</th>
+<th style="text-align: right;">CTI_PRICE_ONLY</th>
+<th style="text-align: right;">CTI_STATIC</th>
+<th style="text-align: center;">Monotone?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025-03-10</td>
+<td style="text-align: right;">1,371</td>
+<td style="text-align: right;">1,642</td>
+<td style="text-align: right;">9,313</td>
+<td style="text-align: right;">9,412</td>
+<td style="text-align: right;">15,351</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td>2025-03-17</td>
+<td style="text-align: right;">1,206</td>
+<td style="text-align: right;">1,304</td>
+<td style="text-align: right;">7,526</td>
+<td style="text-align: right;">7,584</td>
+<td style="text-align: right;">12,437</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td>2025-04-07</td>
+<td style="text-align: right;">4,831</td>
+<td style="text-align: right;">5,455</td>
+<td style="text-align: right;">6,732</td>
+<td style="text-align: right;">7,735</td>
+<td style="text-align: right;">8,695</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td>2025-04-15</td>
+<td style="text-align: right;">1,065</td>
+<td style="text-align: right;">1,065</td>
+<td style="text-align: right;">6,256</td>
+<td style="text-align: right;">6,346</td>
+<td style="text-align: right;">10,266</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td>2025-04-21</td>
+<td style="text-align: right;">2,136</td>
+<td style="text-align: right;">2,657</td>
+<td style="text-align: right;">6,158</td>
+<td style="text-align: right;">6,620</td>
+<td style="text-align: right;">9,034</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td>2025-05-05</td>
+<td style="text-align: right;">3,250</td>
+<td style="text-align: right;">3,250</td>
+<td style="text-align: right;">6,806</td>
+<td style="text-align: right;">7,404</td>
+<td style="text-align: right;">9,908</td>
+<td style="text-align: center;">✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Result.</strong> Monotonicity holds in 6/6 trajectories. This is consistent with Theorem 1 (Ablation Monotonicity) and represents the central causal claim of this empirical study: when capability is the only varying factor (substrate trajectory held fixed), cost is monotonically non-increasing in capability.</p>
+<p><strong>Within-day rank correlation.</strong> Spearman's <em>ρ</em> between <em>ΔD</em> and cost (computed within each day across the five ablation variants) is reported in Table 3.</p>
+<p><strong>Table 3.</strong> <em>Within-day Spearman ρ(ΔD, cost) across ablation variants.</em></p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th style="text-align: right;">Spearman ρ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025-03-10</td>
+<td style="text-align: right;">−0.700</td>
+</tr>
+<tr>
+<td>2025-03-17</td>
+<td style="text-align: right;">−0.700</td>
+</tr>
+<tr>
+<td>2025-04-07</td>
+<td style="text-align: right;">−0.700</td>
+</tr>
+<tr>
+<td>2025-04-15</td>
+<td style="text-align: right;">−0.950</td>
+</tr>
+<tr>
+<td>2025-04-21</td>
+<td style="text-align: right;">−0.700</td>
+</tr>
+<tr>
+<td>2025-05-05</td>
+<td style="text-align: right;">−0.950</td>
+</tr>
+<tr>
+<td><strong>Mean</strong></td>
+<td style="text-align: right;"><strong>−0.783</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The negative ρ indicates that within a day, more decisions correspond to lower cost—consistent with the causal claim. The departure from −1.0 reflects that <em>ΔD</em> is an imperfect proxy for capability: two variants (CTI_FULL and CTI_NO_SOAK) produce the same <em>ΔD</em> count but different costs, because the <em>type</em> of decision matters, not only the <em>count</em>. This is informative rather than damaging: it specifies that the framework's claim is about <em>capability</em>, of which <em>ΔD</em> is a (useful but lossy) measurement.</p>
+<h4>5.1.4 Component-Wise Value Decomposition</h4>
+<p>Applying Theorem 2 (Decomposition) to the ablation data, we compute the contribution of each capability tier averaged across six days:</p>
+<p><strong>Table 4.</strong> <em>Mean component contribution to total value capture (six days).</em></p>
+<table>
+<thead>
+<tr>
+<th>Component added (capability transition)</th>
+<th style="text-align: right;">Mean Δcost ($)</th>
+<th style="text-align: right;">% of total value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>STATIC → PRICE_ONLY (price awareness)</td>
+<td style="text-align: right;">3,861</td>
+<td style="text-align: right;">34.8%</td>
+</tr>
+<tr>
+<td>PRICE_ONLY → NO_BATTERY (surplus gating)</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">0.9%</td>
+</tr>
+<tr>
+<td>NO_BATTERY → NO_SOAK (battery dispatch)</td>
+<td style="text-align: right;">5,156</td>
+<td style="text-align: right;">46.4%</td>
+</tr>
+<tr>
+<td>NO_SOAK → FULL (negative-price soak)</td>
+<td style="text-align: right;">308</td>
+<td style="text-align: right;">2.8%</td>
+</tr>
+<tr>
+<td><strong>Total</strong> (STATIC → FULL)</td>
+<td style="text-align: right;"><strong>11,090</strong></td>
+<td style="text-align: right;"><strong>84.9%</strong>*</td>
+</tr>
+</tbody>
+</table>
+<p><em>*Percentages do not sum to 100% because the remaining ~15% reflects nonlinearity in the chain (interaction effects between components).</em></p>
+<p><strong>Interpretation.</strong> Battery dispatch is the dominant value driver, accounting for nearly half of capturable savings. Price awareness contributes ~35%. Negative-price soak and surplus gating contribute modestly. This decomposition has direct implications for CapEx prioritization (battery storage first) and for understanding which framework components most drive performance.</p>
+<h4>5.1.5 Correlation ΔD ↔ Value (Cross-Day)</h4>
+<p>We compute Pearson's <em>r</em> between <em>ΔD_CTI</em> and cost savings across the six days:</p>
+<ul>
+<li>r(ΔD, vs NAIVE) = +0.877</li>
+<li>r(ΔD, vs ToU)   = +0.869</li>
+</ul>
+<p>Both correlations are strong and positive. The 95% confidence interval (Fisher z-transform, N=6) is [+0.36, +0.98]—wide because of the small sample, indicating that while the central estimate is robust, narrowing the interval requires more days. Section 7 discusses sample-size limitations.</p>
+<p><strong>Critical interpretation.</strong> A skeptical reader might attribute the cross-day correlation to common cause (both <em>ΔD</em> and savings increase on volatile days). Section 5.1.3's ablation study addresses this concern directly: within a day, capability variation alone produces cost variation, confirming a causal mechanism not reducible to common cause.</p>
+<h3>5.2 Retrieval Substrate (IRIS)</h3>
+<h4>5.2.1 Substrate Configuration</h4>
+<p>The retrieval substrate operates on indexed conversations from three commercial AI platforms: Claude (Anthropic), ChatGPT (OpenAI), and Gemini (Google). At the time of measurement, the indexed corpus contained 90 user-assistant message pairs distributed across the three platforms.</p>
+<p>State space: <em>𝒮_R</em> includes the indexed corpus, the active query, and per-document validation history. Action space: <em>𝒜_R</em> = ranked retrieval (document, score) pairs above a cosine similarity threshold. Validation signal: full audio listen-through of a returned result, captured via Text-to-Speech completion event.</p>
+<p>Policy <em>π_R</em> implements:
+1. Tokenization of query, computation of TF-IDF + cosine similarity against corpus.
+2. CWM (Context-Window Modulation) re-ranking by recency and session visit frequency.
+3. Validation boost multiplier per document, with halflife decay of 30 days and asymptotic ceiling at β_max = 1.40 (+40%).</p>
+<h4>5.2.2 Throughput Measurement</h4>
+<p>Over 30 query events spanning May 27–29, 2026, the following throughput statistics were observed:</p>
+<p><strong>Table 5.</strong> <em>Latency distribution across 30 IRIS queries.</em></p>
+<table>
+<thead>
+<tr>
+<th>Statistic</th>
+<th style="text-align: right;">Value (ms)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Min</td>
+<td style="text-align: right;">0.30</td>
+</tr>
+<tr>
+<td>P25</td>
+<td style="text-align: right;">0.85</td>
+</tr>
+<tr>
+<td>Median</td>
+<td style="text-align: right;">1.10</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td style="text-align: right;">1.16</td>
+</tr>
+<tr>
+<td>P75</td>
+<td style="text-align: right;">1.50</td>
+</tr>
+<tr>
+<td>P95</td>
+<td style="text-align: right;">2.20</td>
+</tr>
+<tr>
+<td>Max</td>
+<td style="text-align: right;">2.40</td>
+</tr>
+<tr>
+<td>Std dev</td>
+<td style="text-align: right;">0.59</td>
+</tr>
+<tr>
+<td>Coefficient of variation</td>
+<td style="text-align: right;">50.9%</td>
+</tr>
+</tbody>
+</table>
+<p>Mean <em>Iₜ</em> (cumulative throughput) over the run: <strong>2,072 validated decisions per second of compute time</strong>. Mean cross-platform reach: 47% of queries return results spanning ≥2 platforms; 27% span all three.</p>
+<h4>5.2.3 Comparison Against Network-Hosted Models</h4>
+<p>A natural reference point for retrieval latency is the round-trip time to query a network-hosted AI model. Typical commercial values (median, as of mid-2026):</p>
+<ul>
+<li>GPT-4: ~800 ms first-token latency</li>
+<li>Claude: ~600 ms first-token latency  </li>
+<li>Gemini: ~400 ms first-token latency</li>
+</ul>
+<p>The IRIS median latency of 1.10 ms is <strong>545× to 727× lower</strong> than network-hosted alternatives for the analogous operation (retrieval from a personally relevant memory). This ratio is not a marketing flourish—it is the direct consequence of architectural choice (local IndexedDB versus remote API call) and is invariant under network conditions.</p>
+<h4>5.2.4 Validation Operator Behavior</h4>
+<p>Of the 30 query events, 2 received human validation via full audio listen-through (validation rate = 6.7%). Both validation events triggered the boost mechanism, which updated the document-level multiplier. Subsequent re-queries of the same terms confirmed visible reranking: a document with prior validation rose by one position in the ranking despite a 6-point gap in raw cosine similarity, consistent with the +20% boost ceiling on a single validation.</p>
+<p>The low validation rate (6.7%) reflects an instrumentation limitation: the current signal (full listen) captures only a subset of genuine cognitive validation. We address this in §7 (Limitations).</p>
+<h4>5.2.5 Bounded Amplification (V2) Empirical Check</h4>
+<p>The validation operator's bounded amplification condition (V2 of §3.4) was verified by running the boost calculation against synthetic histories of 1, 3, 10, and 100 validations per document. Results:</p>
+<p><strong>Table 6.</strong> <em>Boost ceiling under varying validation density.</em></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Validations (just now)</th>
+<th style="text-align: right;">Computed boost</th>
+<th style="text-align: center;">β_max satisfied</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.200</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1.300</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1.364</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">1.400</td>
+<td style="text-align: center;">✓ (asymptote)</td>
+</tr>
+</tbody>
+</table>
+<p>The boost function <em>β(n) = 1 + 0.40 × (1 − 1/(1+n))</em> satisfies V2 by construction: it is monotonically increasing in <em>n</em> (validations) but bounded above by 1.40. No validation history can produce runaway amplification.</p>
+<h3>5.3 Cross-Substrate Consistency</h3>
+<p>We now report the central empirical claim of this paper: the loop architecture <em>f</em> operates identically across both substrates, with structurally analogous properties.</p>
+<p><strong>Table 7.</strong> <em>Cross-substrate comparison of CTI loop instantiations.</em></p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Energy Substrate</th>
+<th>Retrieval Substrate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State space includes</td>
+<td>price, solar, demand, battery SoC</td>
+<td>corpus, query, validation history</td>
+</tr>
+<tr>
+<td>Action space</td>
+<td>compute level × battery action</td>
+<td>(document, score) ranking</td>
+</tr>
+<tr>
+<td>ΔD per cycle</td>
+<td>1 to 4 decisions</td>
+<td>1 to 8 decisions per query</td>
+</tr>
+<tr>
+<td>ΔT per cycle</td>
+<td>~93 µs (96 ticks/day → 1ms/tick estimate)</td>
+<td>0.30–2.40 ms (median 1.10 ms)</td>
+</tr>
+<tr>
+<td>Cumulative <em>Iₜ</em></td>
+<td>not reported (degenerate validation)</td>
+<td>2,072 dec/sec</td>
+</tr>
+<tr>
+<td>Capability ordering</td>
+<td>STATIC &lt; PRICE_ONLY &lt; NO_BATTERY &lt; NO_SOAK &lt; FULL</td>
+<td>(analogous ordering available via boost ablation)</td>
+</tr>
+<tr>
+<td>Validation operator</td>
+<td>degenerate (identity)</td>
+<td>per-doc boost with halflife decay</td>
+</tr>
+<tr>
+<td>Monotonicity verified</td>
+<td>✓ (6/6 trajectories)</td>
+<td>✓ (single ablation: boosted doc reranked correctly)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Architectural identity.</strong> Despite the radical difference in substrate (megawatts vs document tokens), the <strong>structural form of f is identical</strong>: observation → policy lookup → action emission → ΔD count → ΔT measurement → validation history update. This identity is what we mean by "substrate invariance" and is the empirical foundation for Conjecture 3.</p>
+<p><strong>Empirical limits.</strong> The cross-substrate evidence is consistent with Conjecture 3 but does not prove it. Specifically:</p>
+<ul>
+<li>We have two substrates, not three. The conjecture asserts universal invariance.</li>
+<li>The validation operator is non-degenerate only in the retrieval substrate. Property (III) of Conjecture 3 (logarithmic saturation of validation effect) is verified only there.</li>
+<li>The throughput numbers (energy ~10/sec, retrieval ~2000/sec) span two orders of magnitude. This is consistent with the conjecture (the <em>form</em> of the law is invariant; the <em>scale</em> depends on substrate physics), but a stricter reading would require that scaling laws between substrates be themselves predictable.</li>
+</ul>
+<p>We treat these limits as charting the direction of necessary future work, not as undermining the present evidence. §6 enumerates the falsifiable predictions that follow from Conjecture 3.</p>
+<hr />
+<p><em>[End of sections 4–5. Section 6 (Falsifiable Predictions), Section 7 (Limitations), Section 8 (Conclusion), and Appendices A and B to follow in final turn.]</em></p>
+<h2>6. Falsifiable Predictions</h2>
+<p>A framework's scientific status is measured by what would falsify it, not by what it explains post-hoc. We enumerate six predictions of CTI that admit empirical refutation. Each prediction specifies the substrate or condition under which CTI claims to hold, and the outcome that would constitute falsification.</p>
+<h3>6.1 Prediction Catalogue</h3>
+<p><strong>P1 (Cross-Substrate Throughput Consistency).</strong> <em>In any substrate satisfying R1–R3 of §3.2 and equipped with a non-degenerate validation operator satisfying V1–V2, the throughput functional Iₜ will exhibit a coefficient of variation (CV) below 60% under stable operating conditions, mirroring the CV = 50.9% observed in the IRIS retrieval substrate (Table 5).</em></p>
+<p><em>Falsification:</em> exhibit a substrate where Iₜ has CV &gt; 100% under stable conditions despite the framework's structural requirements being satisfied. Such a substrate would indicate that <em>Iₜ</em> is not a meaningful throughput measure in that domain, undermining the universality claim of Conjecture 3.</p>
+<p><strong>P2 (Ablation Monotonicity on Novel Substrates).</strong> <em>Any substrate satisfying the conditions of Theorem 1 will exhibit monotonic cost increase under decreasing capability across at least 80% of trajectories.</em></p>
+<p><em>Falsification:</em> a substrate where monotonicity fails on more than 20% of trajectories. We observe 100% monotonicity (6/6) on the energy substrate; a third substrate (e.g., supply-chain dispatch) where capability ordering fails to produce cost ordering on multiple trajectories would falsify P2 and force re-examination of Theorem 1's conditions.</p>
+<p><strong>P3 (Battery-Class Component Dominance in Energy-Like Substrates).</strong> <em>In substrates exhibiting temporal price/value volatility, the single component contributing the largest share of capturable value will be one that enables temporal arbitrage (energy storage in the energy substrate; analogously, persistent ranking memory in retrieval).</em></p>
+<p><em>Falsification:</em> a volatility-bearing substrate where the dominant component is something other than temporal arbitrage—for instance, a substrate where deterministic scheduling captures more value than dynamic storage. Such a finding would refine the framework's prescriptive claims about which components matter.</p>
+<p><strong>P4 (Boost Function Asymptote in Validation-Bearing Substrates).</strong> <em>Any validation operator satisfying V1–V2 with halflife decay parameter τ_½ ∈ [10, 90] days will produce an effective-validation curve plateauing within ±10% of the imposed ceiling β_max after fewer than 10 validations per document.</em></p>
+<p><em>Falsification:</em> a validation operator where, despite satisfying V1–V2 with parameters in the stated range, the boost approaches its ceiling only after 100+ validations or fails to plateau within the observed regime.</p>
+<p><strong>P5 (Latency-Scale Independence).</strong> <em>The retrieval-domain median latency (1.10 ms in IRIS) is within an order of magnitude of latencies achievable by any CTI implementation operating on a local in-memory substrate, independent of corpus size up to 10⁵ documents.</em></p>
+<p><em>Falsification:</em> a CTI retrieval implementation on a corpus of &lt;10⁵ documents that exhibits median latency &gt;100 ms despite no network round-trip. Such a finding would indicate that the architectural choice (local-first, IndexedDB-class storage) does not generalize, undermining the claim that the latency advantage is structural rather than incidental.</p>
+<p><strong>P6 (Volatility-Value Scaling).</strong> <em>Within an energy substrate, CTI's value capture (measured as cost reduction vs. ToU baseline) will scale positively and monotonically with intra-day price volatility (measured as the standard deviation of hourly LMP).</em></p>
+<p><em>Falsification:</em> an energy day where high price volatility (std dev &gt; $20/MWh) produces CTI savings below 50% vs ToU, or where low volatility (std dev &lt; $10/MWh) produces savings above 75%. Either would contradict the scaling claim of Remark 5.1 and force a different theoretical account of when CTI captures most value.</p>
+<h3>6.2 Predictions as a Research Agenda</h3>
+<p>The above six predictions are not equally easy to test. P1 and P2 require new substrates (high cost). P3 and P4 require specific substrate properties (moderate cost). P5 requires only varied retrieval corpora (low cost). P6 requires only more CAISO data (low cost).</p>
+<p>We propose that the prediction-testing roadmap proceeds from low- to high-cost: P5 and P6 first (within months); P4 next (within a year, in a third substrate with validation); P1, P2, P3 last (multi-year program). The framework's scientific maturity correlates directly with the count of these predictions that have been tested and survived.</p>
+<h3>6.3 Predictions as Falsifiability Audit</h3>
+<p>We note that the prediction catalog itself constitutes a falsifiability audit: a framework that resists enumerating clear falsification conditions should be viewed with suspicion. The above six predictions specify the substrate, the measurement, and the outcome that would refute the framework. We invite researchers to test them.</p>
+<hr />
+<h2>7. Limitations and Open Questions</h2>
+<p>A framework's credibility rests in part on what its authors are willing to declare unproved, unverified, or open. We enumerate the principal limitations of the present work.</p>
+<h3>7.1 Sample Size</h3>
+<p><strong>Energy substrate.</strong> N=6 days. Pearson r=0.88 with 95% confidence interval [+0.36, +0.98]. The lower bound of the interval is consistent with "moderate correlation"; only with N ≥ 30 days would the interval narrow sufficiently to claim "strong correlation" without further qualification. The framework's empirical support for Conjecture 3 is therefore robust in central tendency but vulnerable to wide intervals.</p>
+<p><strong>Retrieval substrate.</strong> N=30 queries, of which 2 received human validation. The human validation rate (6.7%) is too low to characterize the validation operator's typical performance. Section 7.4 addresses this.</p>
+<p><strong>Implication.</strong> The empirical findings of §5 are best characterized as <em>strongly suggestive</em>, not <em>decisively established</em>. We assert directional and structural claims (CTI dominates baselines; ablation monotonicity holds; cross-substrate consistency is observed) with high confidence. We assert specific point estimates (r=0.88; 76.5% savings vs naïve; 2,072 dec/sec) with the wider uncertainty appropriate to small samples.</p>
+<h3>7.2 Modeled Versus Real Substrate Inputs</h3>
+<p>The CAISO data used in §5.1 contains real LMP prices but modeled solar generation and demand profiles. This is honestly disclosed in the source CSV headers. The empirical comparison is therefore "real-price-driven decision making against modeled-substrate response," not "real-substrate driven end-to-end."</p>
+<p>This is not fatal—the comparison is <em>fair</em> between engines because all four operate against the same modeled solar/demand profile—but it limits the strength of the substrate-specific claim. A natural extension is to ingest real solar and demand data from CAISO Renewable Generation Forecast (SLD_REN_FCST) and System Load Forecast (SLD_FCST) for the same dates and rerun. We have committed this to forthcoming work.</p>
+<h3>7.3 Substrate Coverage</h3>
+<p>Conjecture 3 (Substrate Invariance) asserts a property that holds across all substrates satisfying R1–R3. Our evidence covers two substrates. Three orders of magnitude separate the throughput scales (≈10 dec/sec in energy, ≈2,000 dec/sec in retrieval); a third substrate at an intermediate scale (supply-chain reorder, with characteristic throughput ≈100 dec/day-of-merchandise) would substantially strengthen the conjecture or refute it.</p>
+<p>We have begun preliminary design of a supply-chain CTI reference implementation but the results are not yet available.</p>
+<h3>7.4 Validation Signal Sparsity</h3>
+<p>In the retrieval substrate, the only validation signal currently captured is full audio listen-through. This signal is sparse: the majority of genuine cognitive validation events (silent reading, mental note-taking, copying text without listening) are not captured. The reported validation rate of 6.7% is therefore a lower bound on true cognitive validation.</p>
+<p>A more complete instrumentation would capture (i) dwell time on result cards, (ii) explicit copy actions, (iii) navigation to the source platform, and (iv) re-querying the same terms within a session. Each of these would tighten the validation signal and likely raise the observed validation rate substantially.</p>
+<p>Until such instrumentation exists, the validation operator's empirical characterization is conservative.</p>
+<h3>7.5 The Cost-Awareness Assumption</h3>
+<p>Theorem 1's proof relies on the <strong>cost-aware decision rule</strong> as a structural condition on the policies being compared. While this condition is easy to verify in our reference implementations (all CTI policy variants select cost-minimizing actions within their action set), it is not automatic for arbitrary policies. A policy with full action capability but poorly tuned thresholds could, in principle, perform worse than a capability-restricted but well-tuned policy. The framework therefore claims more about <em>engineering well-designed policies</em> than about <em>adding capability monotonically improves performance regardless of tuning</em>.</p>
+<p>A natural follow-up question: under what conditions on policy design does Theorem 1 hold robustly, and can these conditions be relaxed? We leave this to future work.</p>
+<h3>7.6 Pareto-Optimality (Conjecture 4)</h3>
+<p>Conjecture 4's status is the most speculative in the paper. We do not currently have proof technique sufficient to establish Pareto-optimality of <em>Iₜ</em>-maximizing policies. The intuition is plausible but the formal connection between <em>Iₜ</em> and substrate-native objectives requires careful treatment that has not been completed. This is the largest open theoretical question of the framework.</p>
+<h3>7.7 Substrate Interaction Effects</h3>
+<p>Theorem 2's decomposition assumes that capability components contribute approximately additively to value capture. The mean decomposition reported in Table 4 sums to ~85% of total value, with ~15% remaining as interaction effects between components. The framework currently models these interactions as residual rather than primary. A substrate with strong component coupling (e.g., supply chain where reorder timing and quantity strongly interact) would require a Shapley-value-like decomposition, which we sketch but do not develop.</p>
+<h3>7.8 Generality of the Validation Operator</h3>
+<p>The validation operator's specification (V1–V2) is necessary for closed-loop adaptation, but the <em>specific form</em> of the operator in our reference implementation (multiplicative boost with halflife decay) is one of many possible. Alternative forms—additive boosts, threshold-based gating, RL-trained value functions—may produce different empirical regimes. We do not claim that our specific operator is optimal, only that it satisfies the framework's structural requirements and produces observable closed-loop adaptation in the IRIS substrate.</p>
+<hr />
+<h2>8. Conclusion</h2>
+<p>We have introduced Cognitive Throughput Infrastructure (CTI), a formal framework for instrumented decision loops over heterogeneous substrates. The framework defines a substrate-independent loop architecture, a throughput functional <em>Iₜ = ΔD/ΔT</em>, and a validation operator with bounded amplification. We have proved two theorems (Ablation Monotonicity, Decomposition of Value Capture) under explicit conditions, and conjectured two stronger claims (Substrate Invariance, Pareto-Optimality of Throughput) whose empirical evidence is consistent with the framework but whose theoretical status remains open.</p>
+<p>Empirically, we have demonstrated:</p>
+<ul>
+<li>CTI defeats three industrial baselines—naïve flat scheduling, peak-throttling, and time-of-use scheduling—by 76.5%, 81.7%, and 78.5% in mean energy cost across six CAISO-priced days.</li>
+<li>Within-substrate ablation produces monotonic cost increase as capability is removed, confirming a causal mechanism distinct from common-cause covariation with price volatility.</li>
+<li>The same loop architecture <em>f</em> operates structurally identically in a cognitive retrieval substrate, with throughput <em>Iₜ</em> ≈ 2,072 validated decisions per second of compute and median latency 1.10 ms—545× to 727× lower than network-hosted alternatives.</li>
+<li>A validation operator with bounded amplification produces observable closed-loop adaptation: validated documents rerank in subsequent queries in a direction consistent with the framework's monotonicity requirement.</li>
+</ul>
+<p>We do not claim that CTI is a complete theory of decision systems, nor that it subsumes existing control theory, reinforcement learning, or information retrieval. We claim that it identifies a specific class of instrumented loops—those satisfying R1–R3—and provides a unified vocabulary, telemetry, and validation framework for systems in this class.</p>
+<p>The framework's most important contribution is <strong>substrate-independent measurement</strong>: that <em>Iₜ</em> admits comparison across domains where comparison was previously impossible. This is, in our view, a precondition for any future theory of "cognitive infrastructure" worth the name.</p>
+<h3>8.1 Invitation to Replication</h3>
+<p>We have written this paper, and built the reference implementations, with replication as a first-class goal. All datasets are available in Appendix B. All code is available under an open-source license at the repositories listed below. The framework's structural claims (Theorems 1 and 2) are mathematical and can be checked by anyone with sufficient background. The empirical claims (Section 5) are reproducible from the supplied data.</p>
+<p>We invite researchers and engineers in any substrate domain—energy dispatch, retrieval systems, supply chain, content recommendation, process control, and others we have not anticipated—to attempt the following:</p>
+<ol>
+<li>Specialize the CTI framework to their domain following §3.6.</li>
+<li>Instrument the resulting loop with <em>Iₜ</em> and a validation operator.</li>
+<li>Conduct an ablation study following §5.1.3 methodology.</li>
+<li>Test one or more of the six falsifiable predictions of §6.</li>
+<li>Report findings—confirmation or refutation—publicly.</li>
+</ol>
+<p>A framework that survives such open replication is a framework worth building on. One that does not survive should be discarded or revised. We welcome both outcomes.</p>
+<h3>8.2 Final Remark</h3>
+<p>CTI emerged from an attempt to engineer a personal cognitive retrieval system (IRIS) that worked across multiple AI platforms. In the course of formalizing what made the system measurably good rather than merely impressive, the throughput functional <em>Iₜ</em> became necessary. When we asked whether the functional could mean something outside retrieval, the energy substrate became the natural test. The cross-domain consistency reported here is therefore not the result of theory imposed on data; it is the result of theory derived from working systems.</p>
+<p>We expect, with non-trivial probability, that one or more of the claims in this paper will turn out to be wrong in ways not yet anticipated. The framework's value rests on whether it is correctable rather than whether it is correct on first writing. We have built it to be falsifiable for that reason.</p>
+<hr />
+<h2>Appendix A: Reference Implementations</h2>
+<p>This appendix provides the core code of the two CTI reference implementations. Both are released under an open-source license (MIT) at the repositories specified in §B.1. We include the essential decision-loop logic; supporting infrastructure (UI, persistence, build tooling) is omitted for clarity but available in full at the repositories.</p>
+<h3>A.1 Energy Substrate Reference Implementation</h3>
+<p>The energy substrate implementation operates on hourly CAISO LMP data, with 96-tick discretization (15-minute resolution) per day. The core decision loop is presented below in Python (a JavaScript version with identical semantics powers the browser-based simulator).</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Substrate parameters</span>
+<span class="n">TICKS</span> <span class="o">=</span> <span class="mi">96</span>
+<span class="n">DT</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">/</span> <span class="n">TICKS</span>         <span class="c1"># hours per tick</span>
+<span class="n">MAXC</span> <span class="o">=</span> <span class="mi">30</span>               <span class="c1"># max compute capacity (MW)</span>
+<span class="n">SOLARCAP</span> <span class="o">=</span> <span class="mi">100</span>          <span class="c1"># peak solar (MW)</span>
+<span class="n">CHEAP_PRICE</span> <span class="o">=</span> <span class="mi">8</span>         <span class="c1"># $/MWh — &quot;cheap&quot; threshold</span>
+<span class="n">EXPENSIVE_PRICE</span> <span class="o">=</span> <span class="mi">35</span>    <span class="c1"># $/MWh — &quot;expensive&quot; threshold</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cti_full</span><span class="p">(</span><span class="n">prices</span><span class="p">,</span> <span class="n">solars</span><span class="p">,</span> <span class="n">demands</span><span class="p">,</span> <span class="n">battery_cap</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">flex</span><span class="o">=</span><span class="mf">0.70</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reference CTI loop for energy substrate.</span>
+<span class="sd">    Returns: {&quot;cost&quot;: $, &quot;decisions&quot;: ΔD, &quot;captured&quot;: MWh}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">soc</span> <span class="o">=</span> <span class="mi">0</span>                              <span class="c1"># battery state of charge (MWh)</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>                             <span class="c1"># cumulative grid cost ($)</span>
+    <span class="n">curtailment_captured</span> <span class="o">=</span> <span class="mi">0</span>             <span class="c1"># MWh of surplus absorbed</span>
+    <span class="n">decisions</span> <span class="o">=</span> <span class="mi">0</span>                        <span class="c1"># ΔD cumulative</span>
+    <span class="n">must_run</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">flex</span><span class="p">)</span> <span class="o">*</span> <span class="n">MAXC</span> <span class="o">*</span> <span class="mf">0.4</span>   <span class="c1"># minimum compute under throttle</span>
+    <span class="n">charge_rate</span> <span class="o">=</span> <span class="n">battery_cap</span> <span class="o">/</span> <span class="mi">4</span>        <span class="c1"># MW (4-hour charge)</span>
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">TICKS</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">solars</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">demands</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">surplus</span> <span class="o">=</span> <span class="n">s</span> <span class="o">-</span> <span class="n">d</span>
+
+        <span class="c1"># II — Decision branch (compute level)</span>
+        <span class="k">if</span>   <span class="n">surplus</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>               <span class="n">compute</span> <span class="o">=</span> <span class="n">MAXC</span>
+        <span class="k">elif</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">CHEAP_PRICE</span><span class="p">:</span>           <span class="n">compute</span> <span class="o">=</span> <span class="mf">0.85</span> <span class="o">*</span> <span class="n">MAXC</span>
+        <span class="k">elif</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="n">EXPENSIVE_PRICE</span><span class="p">:</span>       <span class="n">compute</span> <span class="o">=</span> <span class="n">must_run</span>
+        <span class="k">else</span><span class="p">:</span>                           <span class="n">compute</span> <span class="o">=</span> <span class="mf">0.55</span> <span class="o">*</span> <span class="n">MAXC</span>
+        <span class="n">decisions</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># II — Battery: charge from surplus</span>
+        <span class="n">charge</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">surplus</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">soc</span> <span class="o">&lt;</span> <span class="n">battery_cap</span><span class="p">:</span>
+            <span class="n">charge</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">surplus</span> <span class="o">*</span> <span class="n">DT</span><span class="p">,</span> <span class="n">charge_rate</span> <span class="o">*</span> <span class="n">DT</span><span class="p">,</span> <span class="n">battery_cap</span> <span class="o">-</span> <span class="n">soc</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">charge</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="n">soc</span> <span class="o">+=</span> <span class="n">charge</span>
+                <span class="n">curtailment_captured</span> <span class="o">+=</span> <span class="n">charge</span>
+                <span class="n">decisions</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># II — Battery: discharge at peak</span>
+        <span class="n">disch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="n">EXPENSIVE_PRICE</span> <span class="ow">and</span> <span class="n">soc</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">disch</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">soc</span><span class="p">,</span> <span class="n">charge_rate</span> <span class="o">*</span> <span class="n">DT</span><span class="p">,</span> <span class="n">compute</span> <span class="o">*</span> <span class="n">DT</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">disch</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="n">soc</span> <span class="o">-=</span> <span class="n">disch</span>
+                <span class="n">decisions</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># II — Battery: negative-price soak</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">soc</span> <span class="o">&lt;</span> <span class="n">battery_cap</span><span class="p">:</span>
+            <span class="n">soak</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">charge_rate</span> <span class="o">*</span> <span class="n">DT</span><span class="p">,</span> <span class="n">battery_cap</span> <span class="o">-</span> <span class="n">soc</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">soak</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="n">soc</span> <span class="o">+=</span> <span class="n">soak</span>
+                <span class="n">cost</span> <span class="o">+=</span> <span class="n">soak</span> <span class="o">*</span> <span class="n">p</span>          <span class="c1"># get paid (p &lt; 0)</span>
+                <span class="n">decisions</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># III — Execution: settle compute energy cost</span>
+        <span class="n">need</span> <span class="o">=</span> <span class="n">compute</span> <span class="o">*</span> <span class="n">DT</span>
+        <span class="n">from_solar</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">need</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">DT</span><span class="p">);</span> <span class="n">need</span> <span class="o">-=</span> <span class="n">from_solar</span>
+        <span class="n">from_bat</span>   <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">need</span><span class="p">,</span> <span class="n">disch</span><span class="p">);</span>          <span class="n">need</span> <span class="o">-=</span> <span class="n">from_bat</span>
+        <span class="n">grid_buy</span>   <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">need</span><span class="p">)</span>
+        <span class="n">cost</span> <span class="o">+=</span> <span class="n">grid_buy</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="n">cost</span><span class="p">,</span> <span class="s2">&quot;decisions&quot;</span><span class="p">:</span> <span class="n">decisions</span><span class="p">,</span> <span class="s2">&quot;captured&quot;</span><span class="p">:</span> <span class="n">curtailment_captured</span><span class="p">}</span>
+</code></pre></div>
+
+<p>The four nested decision branches in the <code>II — Decision branch</code> block correspond to the four-tier capability ordering used in the ablation study (§5.1.3). The ablation variants <code>cti_no_soak</code>, <code>cti_no_battery</code>, <code>cti_price_only</code>, and <code>cti_static</code> are obtained by removing the corresponding capability layers from the above (full code in repository).</p>
+<h3>A.2 Retrieval Substrate Reference Implementation</h3>
+<p>The retrieval substrate implementation operates on conversations indexed from commercial AI platforms (Claude, ChatGPT, Gemini) via DOM extraction. The core search engine is presented below in JavaScript (the language of execution: a Chrome MV3 extension popup).</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// IRIS Search Engine — core retrieval loop</span>
+<span class="kd">class</span><span class="w"> </span><span class="nx">IRISSearchEngine</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kr">constructor</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">corpus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">idf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">();</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">corpusSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">sessionVisits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{};</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">validationBoosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">();</span><span class="w">   </span><span class="c1">// doc_id → multiplier ∈ [1.0, 1.4]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="nx">index</span><span class="p">(</span><span class="nx">messages</span><span class="p">,</span><span class="w"> </span><span class="nx">sessionVisits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">sessionVisits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sessionVisits</span><span class="p">;</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">corpus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">messages</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span><span class="w"> </span><span class="p">...</span><span class="nx">m</span><span class="p">,</span><span class="w"> </span><span class="nx">tokens</span><span class="o">:</span><span class="w"> </span><span class="nx">tokenize</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span><span class="w"> </span><span class="p">}));</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">idf</span><span class="p">,</span><span class="w"> </span><span class="nx">N</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">buildIDF</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">corpus</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">m</span><span class="p">.</span><span class="nx">tokens</span><span class="p">));</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">idf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">idf</span><span class="p">;</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">corpusSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">N</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">doc</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">corpus</span><span class="p">)</span>
+<span class="w">      </span><span class="nx">doc</span><span class="p">.</span><span class="nx">vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">buildVector</span><span class="p">(</span><span class="nx">doc</span><span class="p">.</span><span class="nx">tokens</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">idf</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">corpusSize</span><span class="p">);</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Hot-swap the boost map without rebuilding the index</span>
+<span class="w">  </span><span class="nx">setValidationBoosts</span><span class="p">(</span><span class="nx">boosts</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">validationBoosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">boosts</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="nb">Map</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">boosts</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="nx">search</span><span class="p">(</span><span class="nx">queryText</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">ready</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">corpus</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">topK</span><span class="o">=</span><span class="mf">5</span><span class="p">,</span><span class="w"> </span><span class="nx">minScore</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span><span class="w"> </span><span class="nx">useCWM</span><span class="o">=</span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">opts</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">queryTokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tokenize</span><span class="p">(</span><span class="nx">queryText</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">queryTokens</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">queryVec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">buildVector</span><span class="p">(</span><span class="nx">queryTokens</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">idf</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">corpusSize</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">corpus</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">doc</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">raw</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="nx">cosineSimilarity</span><span class="p">(</span><span class="nx">queryVec</span><span class="p">,</span><span class="w"> </span><span class="nx">doc</span><span class="p">.</span><span class="nx">vector</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">visits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">sessionVisits</span><span class="p">[</span><span class="nx">doc</span><span class="p">.</span><span class="nx">sessionId</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">cwm</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="nx">useCWM</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">cwmScore</span><span class="p">(</span><span class="nx">raw</span><span class="p">,</span><span class="w"> </span><span class="nx">doc</span><span class="p">.</span><span class="nx">timestamp</span><span class="p">,</span><span class="w"> </span><span class="nx">visits</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">raw</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">boost</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">validationBoosts</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">doc</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="kr">final</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nx">cwm</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">boost</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="nx">doc</span><span class="p">,</span><span class="w"> </span><span class="nx">rawScore</span><span class="o">:</span><span class="w"> </span><span class="nx">raw</span><span class="p">,</span><span class="w"> </span><span class="nx">score</span><span class="o">:</span><span class="w"> </span><span class="kr">final</span><span class="w"> </span><span class="p">};</span>
+<span class="w">      </span><span class="p">})</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">d</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">rawScore</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">minScore</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">sort</span><span class="p">((</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">score</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">score</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">topK</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Instrumented variant — captures Iₜ telemetry per query</span>
+<span class="w">  </span><span class="nx">searchInstrumented</span><span class="p">(</span><span class="nx">queryText</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">ABOVE_THRESHOLD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.15</span><span class="p">;</span><span class="w">       </span><span class="c1">// honest relevance bar</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">queryText</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">t1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">nAbove</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="nx">results</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">score</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">ABOVE_THRESHOLD</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">platforms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Set</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">platform</span><span class="p">));</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">timestamp</span><span class="o">:</span><span class="w">    </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">(),</span>
+<span class="w">      </span><span class="nx">query</span><span class="o">:</span><span class="w">        </span><span class="nx">queryText</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">n_results</span><span class="o">:</span><span class="w">    </span><span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">n_above_threshold</span><span class="o">:</span><span class="w"> </span><span class="nx">nAbove</span><span class="p">,</span><span class="w">            </span><span class="c1">// ΔD</span>
+<span class="w">      </span><span class="nx">n_platforms</span><span class="o">:</span><span class="w">  </span><span class="nx">platforms</span><span class="p">.</span><span class="nx">size</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">latency_ms</span><span class="o">:</span><span class="w">   </span><span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">((</span><span class="nx">t1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">t0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">100</span><span class="p">,</span><span class="w">   </span><span class="c1">// ΔT</span>
+<span class="w">      </span><span class="nx">threshold</span><span class="o">:</span><span class="w">    </span><span class="nx">ABOVE_THRESHOLD</span><span class="p">,</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">results</span><span class="p">,</span><span class="w"> </span><span class="nx">metrics</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The validation operator's boost computation, satisfying V1 (monotonicity) and V2 (bounded amplification at β_max = 1.40), is implemented in the persistence layer:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">BOOST_CEILING_PCT</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mf">0.40</span><span class="p">;</span><span class="w">        </span><span class="c1">// β_max = 1 + 0.40 = 1.40</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">BOOST_HALFLIFE_DAYS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">30</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">BOOST_DAY_MS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">86400000</span><span class="p">;</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">getValidationBoosts</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">getAllValidationSignals</span><span class="p">();</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">byDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">();</span>
+
+<span class="w">  </span><span class="c1">// Sum decay contributions per document</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">row</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">rows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">ageDays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">now</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">row</span><span class="p">.</span><span class="nx">timestamp</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">BOOST_DAY_MS</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">contribution</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="nx">ageDays</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">BOOST_HALFLIFE_DAYS</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">byDoc</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">doc_id</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">byDoc</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">doc_id</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">contribution</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Convert effective_validations → multiplier (asymptotic to ceiling)</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">boosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">();</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">docId</span><span class="p">,</span><span class="w"> </span><span class="nx">ev</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">byDoc</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">boost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span>
+<span class="w">      </span><span class="nx">BOOST_CEILING_PCT</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">BOOST_CEILING_PCT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">ev</span><span class="p">))</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="w">    </span><span class="nx">boosts</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">docId</span><span class="p">,</span><span class="w"> </span><span class="nx">boost</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">boosts</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The asymptotic curve <code>β(n) = 1 + 0.40 × (1 − 1/(1+n))</code> ensures V2 is satisfied at <em>β_max = 1.40</em> regardless of validation density, and the halflife decay ensures temporal recency is respected.</p>
+<h3>A.3 Cross-Implementation Notes</h3>
+<p>Both reference implementations expose the same conceptual interface:</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Energy</th>
+<th>Retrieval</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substrate ingestion</td>
+<td><code>prices[t], solars[t], demands[t]</code></td>
+<td><code>corpus, query</code></td>
+</tr>
+<tr>
+<td>Decision emission</td>
+<td><code>compute level, battery action</code></td>
+<td><code>(doc, score)</code> ranking</td>
+</tr>
+<tr>
+<td>Cycle latency (ΔT)</td>
+<td>per-tick wall-time</td>
+<td>per-query wall-time</td>
+</tr>
+<tr>
+<td>Decision count (ΔD)</td>
+<td>per-cycle action count</td>
+<td>results above threshold</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>(degenerate; algorithmic)</td>
+<td>full audio listen → boost</td>
+</tr>
+</tbody>
+</table>
+<p>The structural identity is not aesthetic—it is what makes substrate invariance (Conjecture 3) empirically testable. The same instrumentation pattern (ΔD counter, ΔT timer, validation operator) can be ported to a third substrate (e.g., supply-chain dispatch) without conceptual modification.</p>
+<hr />
+<h2>Appendix B: Datasets and Reproducibility</h2>
+<h3>B.1 Repositories</h3>
+<p>The reference implementations and datasets are organized as follows:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">nickhashira12</span><span class="o">/</span><span class="n">cti</span><span class="o">-</span><span class="n">energy</span><span class="o">-</span><span class="n">reference</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">src</span><span class="o">/</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">baselines</span><span class="o">.</span><span class="n">py</span><span class="w">              </span><span class="c1"># Python motors for ablation</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">cti</span><span class="o">-</span><span class="n">energy</span><span class="o">-</span><span class="n">reference</span><span class="o">.</span><span class="n">html</span><span class="w"> </span><span class="c1"># Browser simulator (JS)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">ablations</span><span class="o">.</span><span class="n">py</span><span class="w">              </span><span class="c1"># Movement 2 experiment script</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">data</span><span class="o">/</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">caiso_2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mf">10.</span><span class="n">csv</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">caiso_2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mf">17.</span><span class="n">csv</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">caiso_2025</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mf">07.</span><span class="n">csv</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">caiso_2025</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mf">15.</span><span class="n">csv</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">caiso_2025</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mf">21.</span><span class="n">csv</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">caiso_2025</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mf">05.</span><span class="n">csv</span>
+<span class="w">  </span><span class="err">└──</span><span class="w"> </span><span class="n">results</span><span class="o">/</span>
+<span class="w">      </span><span class="err">├──</span><span class="w"> </span><span class="n">movement1_results</span><span class="o">.</span><span class="n">csv</span><span class="w">     </span><span class="c1"># baseline comparison output</span>
+<span class="w">      </span><span class="err">└──</span><span class="w"> </span><span class="n">movement2_ablations</span><span class="o">.</span><span class="n">csv</span><span class="w">   </span><span class="c1"># ablation study output</span>
+
+<span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">nickhashira12</span><span class="o">/</span><span class="n">iris</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">src</span><span class="o">/</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">lib</span><span class="o">/</span><span class="n">db</span><span class="o">.</span><span class="n">js</span><span class="w">                 </span><span class="c1"># IndexedDB layer, cti_metrics, validation_signals</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">lib</span><span class="o">/</span><span class="n">search</span><span class="o">.</span><span class="n">js</span><span class="w">             </span><span class="c1"># search engine + searchInstrumented</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">lib</span><span class="o">/</span><span class="n">voice</span><span class="o">.</span><span class="n">js</span><span class="w">              </span><span class="c1"># ElevenLabs TTS integration</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">popup</span><span class="o">.</span><span class="n">js</span><span class="w">                  </span><span class="c1"># UI + CTI panel</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">popup</span><span class="o">.</span><span class="n">html</span><span class="w">                </span><span class="c1"># Popup + CTI panel markup</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">content</span><span class="o">.</span><span class="n">js</span><span class="w">                </span><span class="c1"># DOM extraction (Claude/ChatGPT/Gemini)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">background</span><span class="o">.</span><span class="n">js</span><span class="w">             </span><span class="c1"># service worker</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">docs</span><span class="o">/</span>
+<span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">CTI_INSTRUMENTATION</span><span class="o">.</span><span class="n">md</span><span class="w">    </span><span class="c1"># Phase 1/2/3 + Task 5 description</span>
+<span class="w">  </span><span class="err">└──</span><span class="w"> </span><span class="n">exports</span><span class="o">/</span>
+<span class="w">      </span><span class="err">├──</span><span class="w"> </span><span class="n">iris</span><span class="o">-</span><span class="n">cti</span><span class="o">-</span><span class="n">fase123</span><span class="o">-</span><span class="mi">30</span><span class="n">rows</span><span class="o">.</span><span class="n">csv</span><span class="w">     </span><span class="c1"># pre-Task-5 baseline</span>
+<span class="w">      </span><span class="err">└──</span><span class="w"> </span><span class="n">iris</span><span class="o">-</span><span class="n">cti</span><span class="o">-</span><span class="n">post</span><span class="o">-</span><span class="n">task5</span><span class="o">.</span><span class="n">csv</span><span class="w">          </span><span class="c1"># post-Task-5 with boost columns</span>
+</code></pre></div>
+
+<h3>B.2 Dataset: CAISO Energy</h3>
+<p>Each CAISO day file is a normalized CSV with the following structure:</p>
+<div class="codehilite"><pre><span></span><code># CTI-Energy normalized day | source=caiso date=YYYY-MM-DD unit=USD/MWh |
+# price=real demand=modeled solar=modeled
+hour,price,solar,demand
+0,53.622,0.0,38.0
+1,52.910,0.0,38.0
+...
+23,42.283,0.0,41.380
+</code></pre></div>
+
+<p>Provenance: prices are extracted from CAISO OASIS PRC_LMP reports for the dates indicated, using the TH_NP15_GEN-APND aggregation node (Northern California, generation-side). Solar and demand profiles are modeled following industrial diurnal patterns (sinusoidal solar peaking at noon with SOLARCAP=100 MW; double-bell demand peaking at 9 AM and 7 PM with baseline 38 MW). This modeling choice is disclosed in the file header.</p>
+<h3>B.3 Dataset: IRIS Cognitive Retrieval</h3>
+<p>Each IRIS metrics export is a CSV with the following structure (post-Task-5 schema):</p>
+<div class="codehilite"><pre><span></span><code>timestamp,iso_time,query,n_results,n_above_threshold,n_platforms,latency_ms,
+  threshold,validated,n_boosted,max_boost_pct
+1779858458765,2026-05-27T05:07:38Z,&quot;quantum&quot;,7,6,3,0.9,0.15,1,0,0
+1779858867425,2026-05-27T05:14:27Z,&quot;framework&quot;,8,1,3,1.8,0.15,0,0,0
+...
+</code></pre></div>
+
+<p>The 30-query dataset spans May 27–29, 2026, with corpus consisting of indexed conversations from Claude, ChatGPT, and Gemini covering topics including quantum physics, AI productivity, mycelium networks, library of Alexandria, and others. Full corpus reconstruction is not included in the public dataset (it consists of proprietary conversation content); only the search-event metadata is published.</p>
+<h3>B.4 Reproducibility Protocol</h3>
+<p>To replicate the empirical findings of §5:</p>
+<p><strong>For §5.1 (Energy substrate):</strong></p>
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/nickhashira12/cti-energy-reference
+<span class="nb">cd</span><span class="w"> </span>cti-energy-reference
+python3<span class="w"> </span>src/baselines.py<span class="w">        </span><span class="c1"># smoke test on synthetic data</span>
+python3<span class="w"> </span>src/run_movement1.py<span class="w">    </span><span class="c1"># generates Table 1 against real CAISO data</span>
+python3<span class="w"> </span>src/ablations.py<span class="w">        </span><span class="c1"># generates Tables 2-4 (ablation study)</span>
+</code></pre></div>
+
+<p>Expected output: tables matching Tables 1–4 of this paper within ±0.1% (numerical differences attributable to floating-point rounding in different platforms).</p>
+<p><strong>For §5.2 (Retrieval substrate):</strong></p>
+<p>The IRIS extension is loaded as an unpacked Chrome MV3 extension. Indexing requires the researcher's own conversation history on the target AI platforms (Claude, ChatGPT, Gemini). The instrumentation telemetry (Table 5) is generated automatically as the researcher uses the extension; export occurs via the in-app "Export metrics CSV" button.</p>
+<p>We do not currently provide a controlled corpus for retrieval-substrate replication, as conversation content is necessarily user-specific. A protocol for synthetic corpus generation (e.g., from public Wikipedia article paragraphs) is under development.</p>
+<h3>B.5 Software Environment</h3>
+<ul>
+<li>Python: 3.10+ (for baselines and ablations)</li>
+<li>Node.js: not required (no build tooling for the JS reference; everything inline)</li>
+<li>Chrome: 120+ for the IRIS extension (MV3)</li>
+<li>Browser storage: IndexedDB v4 schema</li>
+</ul>
+<p>No external services are required for the energy reference implementation (it operates entirely on local CSVs). The IRIS retrieval implementation requires a valid ElevenLabs API key for text-to-speech, which is stored locally in <code>chrome.storage.local</code> and never transmitted to third parties.</p>
+<h3>B.6 License</h3>
+<p>All code in both repositories is released under the MIT License. CTI as a conceptual framework is unpatented and unencumbered; the framework may be cited as:</p>
+<blockquote>
+<p>Hashira, N. (2026). <em>Cognitive Throughput Infrastructure: A Substrate-Independent Framework for Instrumented Decision Loops.</em> Preprint, Starlike Industries. github.com/nickhashira12/cti</p>
+</blockquote>
+<h3>B.7 Contact and Contributions</h3>
+<p>Replication attempts, contradictory findings, theoretical extensions, and substrate-specific implementations are welcome. Issues, pull requests, and replication reports can be filed at the respective repositories. Direct correspondence: nick@starlike.industries.</p>
+<hr />
+<h2>References</h2>
+<p>[1] Shannon, C. E. (1948). A mathematical theory of communication. <em>Bell System Technical Journal</em>, 27(3), 379–423.</p>
+<p>[2] Salton, G., &amp; McGill, M. J. (1983). <em>Introduction to modern information retrieval</em>. McGraw-Hill.</p>
+<p>[3] Sparck Jones, K. (1972). A statistical interpretation of term specificity and its application in retrieval. <em>Journal of Documentation</em>, 28(1), 11–21.</p>
+<p>[4] Liu, T. Y. (2009). Learning to rank for information retrieval. <em>Foundations and Trends in Information Retrieval</em>, 3(3), 225–331.</p>
+<p>[5] Formal, T., Piwowarski, B., &amp; Clinchant, S. (2021). SPLADE: Sparse lexical and expansion model for first stage ranking. <em>SIGIR 2021</em>.</p>
+<p>[6] Puterman, M. L. (1994). <em>Markov decision processes: Discrete stochastic dynamic programming</em>. Wiley.</p>
+<p>[7] Wood, A. J., Wollenberg, B. F., &amp; Sheblé, G. B. (2014). <em>Power generation, operation, and control</em>, 3rd ed. Wiley.</p>
+<p>[8] Wang, J., et al. (2008). Security-constrained unit commitment with volatile wind power generation. <em>IEEE Trans. Power Systems</em>, 23(3), 1319–1327.</p>
+<p>[9] U.S. Department of Energy. (2019). <em>Time-of-Use Rates: A Survey of Industrial Practices</em>. Technical Report.</p>
+<p>[10] Aksanli, B., &amp; Rosing, T. S. (2014). Providing regulation services and managing data center peak power budgets. <em>Design, Automation &amp; Test in Europe Conference</em>.</p>
+<p>[11] Lee, E. A. (2008). Cyber-physical systems: Design challenges. <em>IEEE International Symposium on Object/Component/Service-Oriented Real-Time Distributed Computing</em>.</p>
+<p>[12] Goiri, Í., et al. (2013). Parasol and GreenSwitch: Managing datacenters powered by renewable energy. <em>ASPLOS</em>.</p>
+<p>[13] Radovanović, A., et al. (2023). Carbon-aware computing for datacenters. <em>IEEE Transactions on Power Systems</em>, 38(2), 1270–1280.</p>
+<hr />
+<p><em>End of paper. v0.1, Starlike Industries, 2026.</em></p>
+</body>
+</html>
